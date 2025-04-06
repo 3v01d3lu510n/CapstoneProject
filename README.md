@@ -4,4 +4,4 @@
 
 Here are we **Capstone Project** repository.
 
-**Goal**: Ths project aims to reasch about webshell, detect and analysis in Incident Response.
+**Goal**: Ths project aims to reaseach about Webshell, Detect and Analysis in Incident Response.
