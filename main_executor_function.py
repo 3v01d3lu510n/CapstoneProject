@@ -7,12 +7,12 @@ def main():
     # Set your entropy thresholds (min, max) for each index
     # These can be adjusted based on the type of files you are analyzing
     # For general text/code:
-    # InfoEntropy: Highly random (encrypted/compressed) files are >4. Plain text is lower.
-    # SpecialCharEntropy: Code might have higher special char entropy than plain text.
-    # QuoteEntropy: Files with many string literals (e.g., JSON, some code) might have higher quote entropy.
-    info_entropy_threshold = (0.0, 4.0)      
-    special_entropy_threshold = (0.0, 0.32)   
-    quote_entropy_threshold = (0.0, 0.085)     
+    # InfoEntropy: Highly random (encrypted/compressed) files are >4. Plain text is lower. (References: Ghost in the Web Shell: Introducing ShellSweep https://www.splunk.com/en_us/blog/security/ghost-in-the-web-shell-introducing-shellsweep.html)
+    # SpecialCharEntropy: Code might have higher special char entropy than plain text. (References: The Research and Improvement in the Detection of PHP Variable WebShell based on Information Entropy https://csroc.org.tw/journal/JOC28-5/JOC2805-06.pdf)
+    # QuoteEntropy: Files with many string literals (e.g., JSON, some code) might have higher quote entropy. (References: The Research and Improvement in the Detection of PHP Variable WebShell based on Information Entropy https://csroc.org.tw/journal/JOC28-5/JOC2805-06.pdf)
+    info_entropy_threshold = (0.0, 4.0)
+    special_entropy_threshold = (0.0, 0.32)
+    quote_entropy_threshold = (0.0, 0.085)
 
     analyzer = EntropyAnalyzer(info_entropy_threshold, special_entropy_threshold, quote_entropy_threshold)
     
@@ -41,5 +41,5 @@ def main():
         for line in results:
             print(line)
             
-if __name__ == "__main__":        
+if __name__ == "__main__":
     main()
