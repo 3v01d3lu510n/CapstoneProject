@@ -40,6 +40,6 @@ def main():
         print("\n--- Suspicious Files Found ---")
         for line in results:
             print(line)
-        
-if __name__ == "__main__":
+            
+if __name__ == "__main__":        
     main()
