@@ -87,11 +87,11 @@ class EntropyAnalyzer:
         except Exception:
             return None # Return None if file can't be read
         
-        # Đếm số ký tự ' và "
-        a_count = content.count("'")  # Số ký tự '
-        b_count = content.count('"')  # Số ký tự "
-        
-        # Lenght of characters of file (non space)
+        # Count character ' and "
+        a_count = content.count("'")  # Count of character '
+        b_count = content.count('"')  # Count of character "
+
+        # Length of characters of file (non space)
         content_no_space = content.replace(" ", "")
         k = len(content_no_space)
         
@@ -126,7 +126,6 @@ class EntropyAnalyzer:
             # If any calculation failed, mark as Unreadable for that part or whole
             # For simplicity, if any part is None, the whole evaluation might be affected.
             # The current implementation marks the whole file as "Unreadable".
-            # You might want to refine this to show partial results if some entropies are calculable.
             unreadable_parts = []
             if info_entropy is None: unreadable_parts.append("InfoEntropy")
             if special_entropy is None: unreadable_parts.append("SpecialCharEntropy")
@@ -152,7 +151,7 @@ class EntropyAnalyzer:
             result.append("High QuoteEntropy")
 
         if result: # If there are any "Low" or "High" entropy flags
-            return "Suspicious: " + ", ".join(result) # Return the specific flags
+            return "Suspicious: " + ", ".join(result) + " | Classification: Webshell Obfuscated" # Return the specific flags
         return "Normal"
 
 
@@ -173,6 +172,6 @@ class EntropyAnalyzer:
 
                 if evaluation != "Normal" or evaluation == "Unreadable":
                     results.append(
-                        f"{file_path} | InfoEntropy: {info_str} | SpecialCharEntropy: {special_str} | QuoteEntropy: {quote_str} | {evaluation} | Classification: Webshell Obfuscated"
+                        f"{file_path} | InfoEntropy: {info_str} | SpecialCharEntropy: {special_str} | QuoteEntropy: {quote_str} | {evaluation}"
                     )
         return results
