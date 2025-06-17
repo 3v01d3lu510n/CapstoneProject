@@ -2,7 +2,7 @@ import argparse
 import sys
 import os
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'Tools'))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'Imports'))
 
 import say  # Import say.py
 import findwr  # Import scanwr.py từ thư mục Tools
