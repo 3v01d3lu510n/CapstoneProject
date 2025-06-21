@@ -1,19 +1,22 @@
 import os
 import re
 
+# Get current user's home directory cross-platform
+home_dir = os.path.expanduser('~')
+
 default_paths = [
-    '/var/www/html',  # Apache  Linux
+    '/var/www/html',  # Apache Linux
     '/usr/share/nginx/html',  # Nginx  Linux
     'C:/xampp/htdocs',  # XAMPP  Windows
     'C:/wamp64/www',  # WAMP  Windows
-    '/home/username/public_html',  # cPanel hosting
+    os.path.join(home_dir, 'public_html'),  # cPanel hosting
     '/var/www/vhosts/domain.com/httpdocs',  # Plesk hosting
     '/srv/http',  # Lighttpd Linux
     '/opt/lampp/htdocs',  # XAMPP  Linux
     'C:/inetpub/wwwroot',  # IIS  Windows
     '/usr/local/var/www',  # Lighttpd Linux
     '/var/www/tomcat/webapps',  # Tomcat (Apache Tomcat) Linux
-    '/home/username/.node_modules',  # Node.js (with PHP-FPM) 
+    os.path.join(home_dir, '.node_modules'),  # Node.js (with PHP-FPM) 
 ]
 
 # Check DocumentRoot Apache
@@ -115,7 +118,6 @@ def find_webroot():
     cherokee_root = get_cherokee_webroot()
     litespeed_root = get_litespeed_webroot()
     tomcat_root = get_tomcat_webroot()
-
     default_webroot = check_default_paths_for_php(default_paths)
 
     if apache_root:
