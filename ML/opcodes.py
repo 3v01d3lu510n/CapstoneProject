@@ -73,26 +73,19 @@ def main():
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         
-        # count = 0
         for root, dirs, files in os.walk(dir_path):
             for fname in files:
-                # Limit the number of files processed if needed
-                # if count >= 12000:
-                #     break
                 php_path = os.path.join(root, fname)
                 if not os.path.isfile(php_path):
                     continue
                 try:
                     opcodes = extract_opcodes(php_path)
                     writer.writerow({'filename': php_path, 'opcodes': ','.join(opcodes)})
-                    count += 1
                 except Exception as e:
                     print(f"Error processing {php_path}: {e}")
                     os.remove(php_path)
                     print(f"Removed problematic file: {php_path}")
                     continue
-            # if count >= 12000:
-            #     break
 
 if __name__ == "__main__":
     main()
