@@ -23,9 +23,10 @@ def create_result_object(
     stdev,
     hash_sha256,
     hash_md5,
+    creation_time,
     last_modified,
-    detection_method,
-    evaluation,
+    access_time,
+    scanned_time
 ):
     result = {
         "FilePath": path,
@@ -39,9 +40,10 @@ def create_result_object(
             "SHA256": hash_sha256,
             "MD5": hash_md5
         },
+        "CreationTime": creation_time,
         "LastModified": last_modified,
-        "DetectionMethod": detection_method,
-        "Evaluation": evaluation
+        "AccessTime": access_time,
+        "ScannedTime": scanned_time
     }
     return result
 
@@ -77,7 +79,7 @@ def scan_by_entropy(directory, file_regex=None, scan_php_content=False):
     analyzer = EntropyAnalyzer()
     hash_calc = FileHashCalculator()
     results = []
-    webshell_paths = []
+    file_paths = []
     ignored_paths = []
     unreadable_paths = []
     total_files = 0
@@ -125,15 +127,25 @@ def scan_by_entropy(directory, file_regex=None, scan_php_content=False):
 
             if evaluation.startswith("Unreadable"):
                 unreadable_paths.append(file_path)
+            
+            if info_e or special_e or quote_e:
+                file_paths.append(file_path)
 
-            if evaluation.startswith("Suspicious") or evaluation.startswith("Unreadable"):
+            if info_e or special_e or quote_e or evaluation.startswith("Unreadable"):                
                 hash_sha256 = hash_calc.calculate_sha256(file_path)
                 hash_md5 = hash_calc.calculate_md5(file_path)
-                last_modified = datetime.datetime.fromtimestamp(
-                    os.path.getmtime(file_path), tz=datetime.timezone.utc
-                ).strftime('%Y-%m-%dT%H:%M:%SZ')
-                stdev = 0
-                detection_method = "EntropyAnalyzer"
+                scanned_time = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')  # Default scanned time
+
+                try:
+                    stat = os.stat(file_path)
+                    creation_time = datetime.datetime.fromtimestamp(stat.st_ctime, tz=datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+                    last_modified = datetime.datetime.fromtimestamp(stat.st_mtime, tz=datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+                    access_time = datetime.datetime.fromtimestamp(stat.st_atime, tz=datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+                except Exception:
+                    creation_time = last_modified = access_time = "N/A"
+                    scanned_time = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+                stdev = 0.0
+
                 result = create_result_object(
                     file_path,
                     round(info_e, 6) if info_e is not None else None,
@@ -142,13 +154,13 @@ def scan_by_entropy(directory, file_regex=None, scan_php_content=False):
                     stdev,
                     hash_sha256,
                     hash_md5,
+                    creation_time,
                     last_modified,
-                    detection_method,
-                    evaluation
+                    access_time,
+                    scanned_time
                 )
                 results.append(result)
-                if evaluation.startswith("Suspicious"):
-                    webshell_paths.append(file_path)
+                
                 # In ra terminal chi tiết:
                 print("="*60)
                 print(f"File: {file_path}")
@@ -157,12 +169,14 @@ def scan_by_entropy(directory, file_regex=None, scan_php_content=False):
                 print(f"  QuoteEntropy: {result['Entropy']['QuoteEntropy']}")
                 print(f"  SHA256: {result['Hash']['SHA256']}")
                 print(f"  MD5: {result['Hash']['MD5']}")
+                print(f"  CreationTime: {result['CreationTime']}")
                 print(f"  LastModified: {result['LastModified']}")
-                print(f"  DetectionMethod: {result['DetectionMethod']}")
-                print(f"  Evaluation: {result['Evaluation']}")
+                print(f"  AccessTime: {result['AccessTime']}")
+                print(f"  ScannedTime: {result['ScannedTime']}")
                 print("="*60)
     total_ignored = len(ignored_paths)
-    return results, webshell_paths, total_files, total_ignored, ignored_paths, unreadable_paths
+    return results, file_paths, total_files, total_ignored, ignored_paths, unreadable_paths
+
 
 def write_csv(results, csv_file):
     headers = [
@@ -172,9 +186,10 @@ def write_csv(results, csv_file):
         "QuoteEntropy",
         "SHA256", 
         "MD5", 
+        "CreationTime",
         "LastModified", 
-        "DetectionMethod", 
-        "Evaluation"
+        "AccessTime",
+        "ScannedTime"
     ]
     with open(csv_file, 'w', encoding='utf-8', newline='') as f:
         writer = csv.writer(f)
@@ -187,9 +202,10 @@ def write_csv(results, csv_file):
                 r['Entropy']['QuoteEntropy'],
                 r['Hash']['SHA256'],
                 r['Hash']['MD5'],
+                r['CreationTime'],
                 r['LastModified'],
-                r['DetectionMethod'],
-                r['Evaluation']
+                r['AccessTime'],
+                r['ScannedTime']
             ])
 
 def write_txt(results, txt_file):
@@ -201,9 +217,10 @@ def write_txt(results, txt_file):
             f.write(f"  QuoteEntropy: {r['Entropy']['QuoteEntropy']}\n")
             f.write(f"  SHA256: {r['Hash']['SHA256']}\n")
             f.write(f"  MD5: {r['Hash']['MD5']}\n")
+            f.write(f"  CreationTime: {r['CreationTime']}\n")
             f.write(f"  LastModified: {r['LastModified']}\n")
-            f.write(f"  DetectionMethod: {r['DetectionMethod']}\n")
-            f.write(f"  Evaluation: {r['Evaluation']}\n")
+            f.write(f"  AccessTime: {r['AccessTime']}\n")
+            f.write(f"  ScannedTime: {r['ScannedTime']}\n")
             f.write("-" * 60 + "\n")
 
 def write_json(results, json_file):
@@ -215,6 +232,7 @@ def write_summary(summary, log_file):
         json.dump(summary, f, indent=4, ensure_ascii=False)
 
 if __name__ == "__main__":
+    
     print('''
         =========================================================
          ___ _  _ ___  ___ _        _ _ _  _                  _ 
@@ -285,6 +303,7 @@ if __name__ == "__main__":
     ensure_folder("Webshell_detect")
 
     time_start = time.time()
+    scan_start_time = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
     all_results = []
     all_paths = []
     all_ignored_paths = []
@@ -345,6 +364,7 @@ if __name__ == "__main__":
 
     summary_file = os.path.join("logs", f"scan_summary_{timestamp}.json")
     time_end = time.time()
+    scan_end_time = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
     summary = {
         "TotalFilesFound": total_files,
         "PotentialWebshells": len(webshell_paths),
@@ -355,7 +375,9 @@ if __name__ == "__main__":
         "WebshellPaths": webshell_paths,
         "FilesIgnoredPath": all_ignored_paths,
         "UnreadableFilePath": all_unreadable_paths,
-        "ScanTime": f"{time_end - time_start:.2f} seconds"
+        "ScanTime": f"{time_end - time_start:.2f} seconds",
+        "StartScan": scan_start_time,
+        "EndScan": scan_end_time
     }
     write_summary(summary, summary_file)
     print(f"Summary written to: {summary_file}")
