@@ -42,18 +42,18 @@ git clone https://github.com/3v01d3lu510n/CapstoneProject.git
          Tool is being developed by IAP491_G5 
 =========================================================
 
-usage: phpshellhound.py [-h HELP] [-p PATH] [-l LOGPATH] [-s SUBDIR] [-e ENTROPY] 
+usage: phpshellhound.py [-h HELP] [-p PATH] [-l LOGPATH] [-s SUBDIR] [-y YARA] [-w WHITELIST] 
 
 PHPShellHound - Scan PHP webshells.
 
 options:
-  -h, --help            show this help message and exit
-  -p, --path PATH       Scan Path
-  -l, --logpath LOGPATH
-                        Log file save path (Do not end with '/')
-  -s, --subdirs         Scan subdirectories
-  -e, --entropy         Enable entropy scan
-```
+  -h, --help            Show this help message and exit
+  -p, --path            Scan Path
+  -l, --logpath         Log file save path (Do not end with '/')
+  -f, --folder          Scan subdirectories
+  -w, --whitelist       Convert the file into a YARA rule to create a whitelist
+  -s , --start          Start scan webshells
+  ```
 
 # Outstanding Issues
 ## List of Unresolved Issues
