@@ -1,4 +1,0 @@
-pandas
-scikit-learn
-tree-sitter
-tree-sitter-php
