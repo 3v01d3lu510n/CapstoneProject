@@ -19,7 +19,7 @@ class WebshellPredicter:
         pass
     
     def get_entropies(self, file_path: str) -> float:
-        return self.entropyAnalyzer.analyze_file(file_path)
+        return self.entropyAnalyzer.get_file_entropies(file_path)
     
     def get_data_characteristics_flag(self, file_path: str) -> int:
         return self.dataCharacteristics.evaluate_file_characteristics(file_path)
@@ -63,23 +63,25 @@ class WebshellPredicter:
         for root, dirs, files in os.walk(directory_path):
             for filename in files:
                 file_path = os.path.join(root, filename)
-                if os.path.isfile(file_path):
-                    prediction = self.predict_file(file_path)
-                    results[file_path] = 'Webshell' if prediction == 1 else 'Not a Webshell'
+                abs_path = os.path.abspath(file_path)
+                if os.path.isfile(abs_path):
+                    prediction = self.predict_file(abs_path)
+                    results[abs_path] = 'Webshell' if prediction == 1 else 'Not a Webshell'
         return results
-    
+
 if __name__ == "__main__":
-   
+
     if len(sys.argv) != 2:
         print(f"Usage: {sys.argv[0]} <file/directory_path>")
         sys.exit(1)
-    
+
     file_path = sys.argv[1]
     predicter = WebshellPredicter()
-    
+
     if os.path.isfile(file_path):
-        result = predicter.predict_file(file_path)
-        print(f"Prediction for file {file_path}: {'Webshell' if result == 1 else 'Not a Webshell'}")
+        abs_path = os.path.abspath(file_path)
+        result = predicter.predict_file(abs_path)
+        print(f"Prediction for file {abs_path}: {'Webshell' if result == 1 else 'Not a Webshell'}")
 
     if os.path.isdir(file_path):
         results = predicter.predict_directory(file_path)
