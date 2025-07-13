@@ -113,7 +113,7 @@ class EntropyAnalyzer:
         entropy = entropy_a + entropy_b
         return entropy
 
-    def get_file_entropy(self, file_path):
+    def get_file_entropies(self, file_path):
         # Analyzes a file for its various entropy values
         entropies = dict()
         info_entropy = self.calculate_info_entropy(file_path)
@@ -132,7 +132,7 @@ if __name__ == "__main__":
     file_path = sys.argv[1]
     entropy_analyzer = EntropyAnalyzer()
     
-    entropies = entropy_analyzer.get_file_entropy(file_path)
+    entropies = entropy_analyzer.get_file_entropies(file_path)
     if entropies:
         print(f"Entropy values for {file_path}:")
         for key, value in entropies.items():
