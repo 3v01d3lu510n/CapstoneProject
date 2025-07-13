@@ -1,0 +1,30 @@
+{
+    "TotalFilesFound": 2000,
+    "PotentialWebshells": 2000,
+    "TotalFilesIgnored": 0,
+    "WebshellPaths": {
+        "path":["D:\\Capstone project\\benign\\benign_data_10K_filtered\\bengin_test_data\\profilefield_cleanup_2.php",
+        "F:\\Tele Bot\\users\\5381812827_test\\b374kShell_b7feb990a5e9ccbbf1b1d024b3d617985ed94190.php"
+    ],
+        "CreationDate":[
+            "12/12/2025",
+            "23/05/2024"
+        ],
+        "Hash_MD5": [
+            "ffaca986a3bd3585c1835b081e784098",
+            "b7feb990a5e9ccbbf1b1d024b3d61798"
+        ],
+        "Hash_SHA-1": [
+            "a3b381d66a2b0190e80062f3d827944b32ee1831c3f07aca6de55702bf048f36",
+            "ad68a42515138381b5ab28f5b995cc111ac3472beeed3c4bf79a3de7dfdb21b6"
+        ],
+        "Extension": [
+            ".php",
+            ".txt",
+            ""
+        ]
+      
+    },
+    "FilesIgnoredPath": [], "_comment1": "2 TH, TH1: file đọc được nhưng lỗi format,icon,... không xác định được webshell hay không. TH2: File không có quyền hoặc không truy cập để đọc được",
+    "ScanTime" : "13/06/2025-23:11:12"
+}
