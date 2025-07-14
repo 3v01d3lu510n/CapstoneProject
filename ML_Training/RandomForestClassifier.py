@@ -1,12 +1,12 @@
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
+import joblib
 
 # Load your features file
-df = pd.read_csv('.\\train_data_2_grams_labeled.csv')
+df = pd.read_csv('.\\2nd_train_data_2_grams_labeled.csv')
 
 # Split tf-idf output into separate columns
 tfidf_cols = df['tf-idf output'].str.split(',', expand=True).astype(float)
@@ -15,6 +15,7 @@ tfidf_cols.columns = [f'tfidf_{i}' for i in range(tfidf_cols.shape[1])]
 # Combine all features (excluding filename and tf-idf output string)
 X = pd.concat([
     df[['InfoEntropy', 'SpecialCharEntropy', 'QuoteEntropy']].astype(float),
+    df['characteristics_flag'].astype(int),
     tfidf_cols
 ], axis=1)
 
@@ -42,3 +43,6 @@ fnr = FN / (FN + TP) if (FN + TP) > 0 else 0
 
 print(f"False Positive Rate (FPR): {fpr:.4f}")
 print(f"False Negative Rate (FNR): {fnr:.4f}")
+
+# Export the model
+joblib.dump(clf, 'random_forest_classifier.pkl')
