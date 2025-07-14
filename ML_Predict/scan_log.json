@@ -1,0 +1,167 @@
+{
+    "TotalFilesFound": 45,
+    "PotentialWebshells": 39,
+    "TotalFilesIgnored": 0,
+    "UnreadableFile": 0,
+    "WebshellPaths": [
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\shellIDAL.class.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\shellModel.class.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\ShellPass.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\ShellTon.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\ShellTonV2.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\shellzx_7.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\shin (2).php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\SHOR7CUT-Shell-BETA-KILLER.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\Shor7cut_Shell_1.0.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\short_shell.md",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\Shu1337 (2).php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\Shu1337.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\sigunq (2).php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\SilenceShell.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\SilickGroupkphpkWebshellkv3.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\Silic_Group_php_Webshell_v3.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\SimAttacker - Vrsion 1.0.0 - priv8 4 My friend (2).php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\SimAttacker - Vrsion 1.0.0 - priv8 4 My friend.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\SimAttacker - Vrsion 1.0.0 - priv8 4 My friend_1.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\SimAttacker-Version1.0.0-encoded (2).php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\simattacker.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\simattacker.txt",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\simattackerb.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\simattacker_2.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\simattacker__2.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\simattaxker_cision.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\Simple-PHP-Shell (2).php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\Simple-PHP-Shell.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\simplexml.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\SimpleXMLElement+xmlpath.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\simple_cmd.txt",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\simple_cmdb.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\simple_cmd_2.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\SimShell 1.0 - Simorgh Security MGZ_12 (2).txt",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\SimShell_1.0_-_Simorgh_Security_MGZ_12.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\SimShell_d4370177b4985e45df8040c354951744c2b82aa3.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\Sincap.php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\Sincap1.0-encoded (2).php",
+            "date": "15/07/2025"
+        },
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\Sincap_1.0.php",
+            "date": "15/07/2025"
+        }
+    ],
+    "FilesIgnoredPath": [],
+    "UnreadableFilePath": [],
+    "ScanTime": "15/07/2025-02:04:34"
+}
