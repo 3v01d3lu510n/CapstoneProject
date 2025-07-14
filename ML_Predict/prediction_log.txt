@@ -1,0 +1,6 @@
+Prediction for file C:\Users\dinht\Documents\RandomForest\benigns\white\A128GCMKW.php: Not a Webshell
+Summary:
+Webshell: 0
+Not a Webshell: 1
+  C:\Users\dinht\Documents\RandomForest\benigns\white\A128GCMKW.php
+Unable to predict: 0
