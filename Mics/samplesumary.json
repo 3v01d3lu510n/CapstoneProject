@@ -1,0 +1,13 @@
+{
+    "TotalFilesFound": 2000,
+    "PotentialWebshells": 243,
+    "TotalFilesIgnored": 1,
+    "WebshellPaths": {
+         "name": [
+            "profilefield_cleanup_2.php",
+            "b374kShell_b7feb990a5e9ccbbf1b1d024b3d617985ed94190.php"
+        ]
+    },
+    "FilesIgnoredPath": ["D:\\Capstone project\\benign\\benign_data_filtered\\bengin_test_data3Kfile\\Action_2.php"],
+    "ScanTime" : "13/06/2025-23:11:12"
+}
