@@ -3,6 +3,8 @@ import sys, os
 from typing import List
 import pandas as pd
 import joblib
+import json
+import datetime
 
 class WebshellPredicter:
     
@@ -82,24 +84,33 @@ if __name__ == "__main__":
     not_webshell_files = []
     unable_files = []
 
+    total_files_found = 0
+
     try: 
         if os.path.isfile(file_path):
             abs_path = os.path.abspath(file_path)
+            total_files_found = 1
             result = predicter.predict_file(abs_path)
             label = 'Webshell' if result == 1 else 'Not a Webshell'
-            print(f"Prediction for file {abs_path}: {label}")
             log_lines.append(f"Prediction for file {abs_path}: {label}")
             if label == 'Webshell':
-                webshell_files.append(abs_path)
+                webshell_files.append({
+                    "path": abs_path,
+                    "date": datetime.datetime.now().strftime("%d/%m/%Y")
+                })
             else:
                 not_webshell_files.append(abs_path)
 
         elif os.path.isdir(file_path):
             results = predicter.predict_directory(file_path)
+            total_files_found = len(results)
             for path, prediction in results.items():
                 log_lines.append(f"Prediction for file {path}: {prediction}")
                 if prediction == 'Webshell':
-                    webshell_files.append(path)
+                    webshell_files.append({
+                        "path": path,
+                        "date": datetime.datetime.now().strftime("%d/%m/%Y")
+                    })
                 elif prediction == 'Not a Webshell':
                     not_webshell_files.append(path)
                 else:
@@ -108,25 +119,22 @@ if __name__ == "__main__":
         print(f"Unable to detect {file_path}")
         sys.exit(1)
 
-    # Add summary to log
-    summary = []
-    summary.append(f"Summary:")
-    summary.append(f"Webshell: {len(webshell_files)}")
-    for f in webshell_files:
-        summary.append(f"  {f}")
-    summary.append(f"Not a Webshell: {len(not_webshell_files)}")
-    for f in not_webshell_files:
-        summary.append(f"  {f}")
-    summary.append(f"Unable to predict: {len(unable_files)}")
-    for f in unable_files:
-        summary.append(f"  {f}")
+    scan_time = datetime.datetime.now().strftime("%d/%m/%Y-%H:%M:%S")
 
-    log_lines.extend(summary)
-    print('\n'.join(summary))
+    # Prepare log in the requested format
+    log_dict = {
+        "TotalFilesFound": total_files_found,
+        "PotentialWebshells": len(webshell_files),
+        "TotalFilesIgnored": 0,
+        "UnreadableFile": len(unable_files),
+        "WebshellPaths": webshell_files,
+        "FilesIgnoredPath": [],
+        "UnreadableFilePath": unable_files,
+        "ScanTime": scan_time
+    }
 
-    # Write log to file
-    log_file = "prediction_log.txt"
+    # Write log to JSON file
+    log_file = "scan_log.json"
     with open(log_file, "w", encoding="utf-8") as f:
-        for line in log_lines:
-            f.write(line + "\n")
+        json.dump(log_dict, f, indent=4, ensure_ascii=False)
     print(f"Prediction results saved to {log_file}")
