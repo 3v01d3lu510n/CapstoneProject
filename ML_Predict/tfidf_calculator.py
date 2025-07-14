@@ -2,16 +2,15 @@ import sys
 import re
 import csv
 import subprocess
-import math
 from collections import Counter
 from typing import List
+import numpy as np
 
 csv.field_size_limit(2**31 - 1)  # Increase field size limit for large CSVs
 
 class TFIDFCalculator:
     
-    n_grams_dataset = "dataset_2_grams.csv"
-    opcodes_dataset = "dataopcodes_2.csv"
+    idf_dataset = "idf_values.csv"
     
     def __init__(self):
         pass
@@ -25,11 +24,6 @@ class TFIDFCalculator:
         )
     
     def extract_opcodes(self, php_file: str) -> List[str]:
-        """
-        Runs phpdbg to dump opcodes for `php_file`, then returns a list of
-        opcode names (e.g. ECHO, FETCH_W, etc.), stripping away offsets,
-        operands, and any file-path lines.
-        """
 
         cmd = [
             "phpdbg",
@@ -60,68 +54,33 @@ class TFIDFCalculator:
                 opcodes.append(columns[2])
         
         return opcodes
-    
-    def read_opcodes(self, filepath):
-        docs = []
-        filenames = []
-        with open(filepath, newline='', encoding='utf-8') as f:
+
+    def load_idf(self, idf_csv_path):
+        idf_dict = {}
+        ngrams = []
+        with open(idf_csv_path, newline='', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader:
-                filenames.append(row['filename'])
-                opcodes = [op.strip() for op in row['opcodes'].split(',') if op.strip()]
-                docs.append(opcodes)
-        return filenames, docs
+                ngram = tuple(row['ngram'].split(' '))
+                idf_dict[ngram] = float(row['idf'])
+                ngrams.append(ngram)
+        return ngrams, idf_dict
     
-    def generate_2_grams(self, opcodes):
-        return [tuple(opcodes[i:i+2]) for i in range(len(opcodes)-2+1)]
-    
-    def read_unique_ngrams(self, filepath):
-        with open(filepath, newline='', encoding='utf-8') as f:
-            reader = csv.reader(f)
-            header = next(reader)
-            ngrams = [tuple(row) for row in reader]
-        return ngrams
-    
-    def compute_tf_idf(self, unique_ngrams, docs):
-        vocab = {ngram: idx for idx, ngram in enumerate(unique_ngrams)}
-        N = len(docs)
-        df = Counter()
-        doc_ngrams = []
-
-        # Count n-grams in each doc and DF
-        for opcodes in docs:
-            ngrams = self.generate_2_grams(opcodes)
-            counts = Counter(ngrams)
-            doc_ngrams.append(counts)
-            df.update(set(ngrams))
-
-        # Compute IDF
-        idf = {}
-        for ngram in unique_ngrams:
-            idf[ngram] = math.log((N + 1) / (df[ngram] + 1)) + 1  # Smoothing
-
-        # Compute TF-IDF matrix
-        tfidf_matrix = []
-        for counts in doc_ngrams:
-            total = sum(counts.values())
-            row = []
-            for ngram in unique_ngrams:
-                tf = counts[ngram] / total if total > 0 else 0
-                row.append(tf * idf[ngram])
-            tfidf_matrix.append(row)
-        return tfidf_matrix
+    def compute_tf(self, unique_ngrams, opcodes):
+        n = len(unique_ngrams[0])
+        ngrams_in_file = [tuple(opcodes[i:i+n]) for i in range(len(opcodes)-n+1)]
+        counts = Counter(ngrams_in_file)
+        total = sum(counts.values())
+        tf_vector = [counts[ngram] / total if total > 0 else 0 for ngram in unique_ngrams]
+        return tf_vector
     
     def get_tfidf_result(self, file_path):
-        unique_ngrams = self.read_unique_ngrams(self.n_grams_dataset)
-        filenames, docs = self.read_opcodes(self.opcodes_dataset)
-        # Extract opcodes from the target file
-        target_opcodes = self.extract_opcodes(file_path)
-        # Add the target file's opcodes to the docs
-        docs.append(target_opcodes)
-        # Compute TF-IDF for all docs (including the target file)
-        tfidf_matrix = self.compute_tf_idf(unique_ngrams, docs)
-        # The last row is the target file
-        return tfidf_matrix[-1]
+        unique_ngrams, idf_dict = self.load_idf(self.idf_dataset)
+        opcodes = self.extract_opcodes(file_path)
+        tf_vector = self.compute_tf(unique_ngrams, opcodes)
+        idf_vector = [idf_dict.get(ngram, 0.0) for ngram in unique_ngrams]
+        tfidf_vector = np.multiply(tf_vector, idf_vector).tolist()
+        return tfidf_vector
     
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -132,6 +91,5 @@ if __name__ == "__main__":
     tfidf_calculator = TFIDFCalculator()
     
     tfidf_result = tfidf_calculator.get_tfidf_result(file_path)
-    print(f"Extracted opcodes from {file_path}.")
-    print(len(tfidf_result))
-    print(f"{tfidf_result}")
+    for i in tfidf_result:
+        print(f"{i}", end=',')
