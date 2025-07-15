@@ -22,9 +22,6 @@ class ASTAnalyzer:
         pass
     
     def get_executetable_characteristics_flag(self, code):
-        
-        EXEC_FUNCS = self.EXEC_FUNCS
-        USER_INPUTS = self.USER_INPUTS
 
         tree = self.parser.parse(code)
         root = tree.root_node
@@ -40,7 +37,7 @@ class ASTAnalyzer:
                     func_node = node.child_by_field_name('function')
                     if func_node is not None:
                         func_name = code[func_node.start_byte:func_node.end_byte].decode('utf8', errors='replace')
-                        if func_name in EXEC_FUNCS:
+                        if func_name in self.EXEC_FUNCS:
                             args_node = node.child_by_field_name('arguments')
                             if args_node:
                                 for arg in args_node.children:
@@ -59,7 +56,7 @@ class ASTAnalyzer:
                 node = stack.pop()
                 if node.type == 'variable_name':
                     var_name = code[node.start_byte:node.end_byte].decode('utf8', errors='replace')
-                    if var_name in USER_INPUTS:
+                    if var_name in self.USER_INPUTS:
                         return 1
                 stack.extend(node.children)
             return 0
