@@ -135,6 +135,7 @@ if __name__ == "__main__":
     log_dict = {
         "TotalFilesFound": total_files_found,
         "PotentialWebshells": len(webshell_files),
+        "NotWebshell": len(not_webshell_files), 
         "TotalFilesIgnored": 0,
         "UnreadableFile": len(unable_files),
         "WebshellPaths": webshell_files,
