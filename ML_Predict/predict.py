@@ -57,18 +57,31 @@ class WebshellPredicter:
 
         return prediction[0]
     
-    def predict_directory(self, directory_path: str):
-        results = {}
-        for root, dirs, files in os.walk(directory_path):
-            for filename in files:
-                file_path = os.path.join(root, filename)
-                abs_path = os.path.abspath(file_path)
-                if os.path.isfile(abs_path):
-                    prediction = self.predict_file(abs_path)
-                    if prediction is None:
-                        results[abs_path] = 'Unable to predict'
-                    results[abs_path] = 'Webshell' if prediction == 1 else 'Not a Webshell'
-        return results
+def scan_directory(dir_path, predicter, webshell_files, not_webshell_files, unable_files, log_lines):
+    total_files = 0
+    for root, _, files in os.walk(dir_path):
+        for file in files:
+            abs_path = os.path.abspath(os.path.join(root, file))
+            total_files += 1
+            try:
+                result = predicter.predict_file(abs_path)
+                label = 'Webshell' if result == 1 else 'Not a Webshell'
+                log_lines.append(f"Prediction for file {abs_path}: {label}")
+                if label == 'Webshell':
+                    webshell_files.append({
+                        "path": abs_path,
+                        "date": datetime.datetime.now().strftime("%d/%m/%Y")
+                    })
+                else:
+                    not_webshell_files.append(abs_path)
+            except Exception as e:
+                print(f"Unable to detect {abs_path}: {e}")
+                unable_files.append({
+                    "path": abs_path,
+                    "error": str(e),
+                    "date": datetime.datetime.now().strftime("%d/%m/%Y")
+                })
+    return total_files
 
 if __name__ == "__main__":
 
@@ -86,10 +99,10 @@ if __name__ == "__main__":
 
     total_files_found = 0
 
-    try: 
-        if os.path.isfile(file_path):
-            abs_path = os.path.abspath(file_path)
-            total_files_found = 1
+    if os.path.isfile(file_path):
+        abs_path = os.path.abspath(file_path)
+        total_files_found = 1
+        try:
             result = predicter.predict_file(abs_path)
             label = 'Webshell' if result == 1 else 'Not a Webshell'
             log_lines.append(f"Prediction for file {abs_path}: {label}")
@@ -100,24 +113,15 @@ if __name__ == "__main__":
                 })
             else:
                 not_webshell_files.append(abs_path)
-
-        elif os.path.isdir(file_path):
-            results = predicter.predict_directory(file_path)
-            total_files_found = len(results)
-            for path, prediction in results.items():
-                log_lines.append(f"Prediction for file {path}: {prediction}")
-                if prediction == 'Webshell':
-                    webshell_files.append({
-                        "path": path,
-                        "date": datetime.datetime.now().strftime("%d/%m/%Y")
-                    })
-                elif prediction == 'Not a Webshell':
-                    not_webshell_files.append(path)
-                else:
-                    unable_files.append(path)
-    except Exception as e:
-        print(f"Unable to detect {file_path}")
-        sys.exit(1)
+        except Exception as e:
+            print(f"Unable to detect {abs_path}: {e}")
+            unable_files.append({
+                "path": abs_path,
+                "error": str(e),
+                "date": datetime.datetime.now().strftime("%d/%m/%Y")
+            })
+    elif os.path.isdir(file_path):
+        total_files_found = scan_directory(file_path, predicter, webshell_files, not_webshell_files, unable_files, log_lines)
 
     scan_time = datetime.datetime.now().strftime("%d/%m/%Y-%H:%M:%S")
 
