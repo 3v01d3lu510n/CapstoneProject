@@ -1,6 +1,7 @@
 {
     "TotalFilesFound": 4943,
     "PotentialWebshells": 4174,
+    "NotWebshell": 78,
     "TotalFilesIgnored": 0,
     "UnreadableFile": 691,
     "WebshellPaths": [
@@ -20473,5 +20474,5 @@
             "date": "15/07/2025"
         }
     ],
-    "ScanTime": "15/07/2025-12:12:54"
+    "ScanTime": "15/07/2025-13:08:41"
 }
