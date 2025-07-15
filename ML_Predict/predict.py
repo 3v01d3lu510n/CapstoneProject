@@ -73,7 +73,10 @@ def scan_directory(dir_path, predicter, webshell_files, not_webshell_files, unab
                         "date": datetime.datetime.now().strftime("%d/%m/%Y")
                     })
                 else:
-                    not_webshell_files.append(abs_path)
+                    not_webshell_files.append({
+                        "path": abs_path,
+                        "date": datetime.datetime.now().strftime("%d/%m/%Y")
+                    })
             except Exception as e:
                 print(f"Unable to detect {abs_path}: {e}")
                 unable_files.append({
@@ -112,7 +115,10 @@ if __name__ == "__main__":
                     "date": datetime.datetime.now().strftime("%d/%m/%Y")
                 })
             else:
-                not_webshell_files.append(abs_path)
+                not_webshell_files.append({
+                    "path": abs_path,
+                    "date": datetime.datetime.now().strftime("%d/%m/%Y")
+                })
         except Exception as e:
             print(f"Unable to detect {abs_path}: {e}")
             unable_files.append({
@@ -132,6 +138,7 @@ if __name__ == "__main__":
         "TotalFilesIgnored": 0,
         "UnreadableFile": len(unable_files),
         "WebshellPaths": webshell_files,
+        "NotWebshellPaths": not_webshell_files,  
         "FilesIgnoredPath": [],
         "UnreadableFilePath": unable_files,
         "ScanTime": scan_time
