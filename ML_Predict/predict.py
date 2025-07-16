@@ -184,14 +184,12 @@ if __name__ == "__main__":
         "PotentialWebshells": len(webshell_files),
         "NotWebshell": len(not_webshell_files),
         "TotalFilesIgnored": len(unable_files),
-        "UnreadableFile": 0,
-        "WebshellPaths": webshell_files,  # Now a list of dicts with all required fields
+        "WebshellPaths": webshell_files,  
         "NotWebshellPaths": not_webshell_files,
         "FilesIgnoredPath": [
             {"path": f["path"], "comment": f["comment"]}
             for f in unable_files
         ],
-        "UnreadableFilePath": [],
         "ScanTime": scan_time
     }
 
