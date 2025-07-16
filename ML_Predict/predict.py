@@ -5,6 +5,7 @@ import pandas as pd
 import joblib
 import json
 import datetime
+import hashlib
 
 class WebshellPredicter:
     
@@ -57,6 +58,30 @@ class WebshellPredicter:
 
         return prediction[0]
     
+def get_file_hashes(file_path):
+    """Return MD5 and SHA-1 hashes for a file."""
+    hash_md5 = hashlib.md5()
+    hash_sha1 = hashlib.sha1()
+    try:
+        with open(file_path, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_md5.update(chunk)
+                hash_sha1.update(chunk)
+        return hash_md5.hexdigest(), hash_sha1.hexdigest()
+    except Exception as e:
+        return "", ""
+
+def get_file_extension(file_path):
+    return '.' + os.path.splitext(file_path)[1].lstrip('.').lower()
+
+def get_file_creation_date(file_path):
+    """Return the creation date of the file as dd/mm/YYYY."""
+    try:
+        ctime = os.path.getctime(file_path)
+        return datetime.datetime.fromtimestamp(ctime).strftime("%d/%m/%Y")
+    except Exception:
+        return ""
+
 def scan_directory(dir_path, predicter, webshell_files, not_webshell_files, unable_files, log_lines):
     total_files = 0
     for root, _, files in os.walk(dir_path):
@@ -67,22 +92,33 @@ def scan_directory(dir_path, predicter, webshell_files, not_webshell_files, unab
                 result = predicter.predict_file(abs_path)
                 label = 'Webshell' if result == 1 else 'Not a Webshell'
                 log_lines.append(f"Prediction for file {abs_path}: {label}")
+                file_date = get_file_creation_date(abs_path)
                 if label == 'Webshell':
+                    md5, sha1 = get_file_hashes(abs_path)
+                    ext = get_file_extension(abs_path)
                     webshell_files.append({
                         "path": abs_path,
-                        "date": datetime.datetime.now().strftime("%d/%m/%Y")
+                        "date": file_date,
+                        "Hash_MD5": md5,
+                        "Hash_SHA-1": sha1,
+                        "Extension": ext
                     })
                 else:
+                    md5, sha1 = get_file_hashes(abs_path)
+                    ext = get_file_extension(abs_path)
                     not_webshell_files.append({
                         "path": abs_path,
-                        "date": datetime.datetime.now().strftime("%d/%m/%Y")
+                        "date": file_date,
+                        "Hash_MD5": md5,
+                        "Hash_SHA-1": sha1,
+                        "Extension": ext
                     })
             except Exception as e:
                 print(f"Unable to detect {abs_path}: {e}")
                 unable_files.append({
                     "path": abs_path,
-                    "error": str(e),
-                    "date": datetime.datetime.now().strftime("%d/%m/%Y")
+                    "comment": str(e),
+                    "date": get_file_creation_date(abs_path)
                 })
     return total_files
 
@@ -109,22 +145,33 @@ if __name__ == "__main__":
             result = predicter.predict_file(abs_path)
             label = 'Webshell' if result == 1 else 'Not a Webshell'
             log_lines.append(f"Prediction for file {abs_path}: {label}")
+            file_date = get_file_creation_date(abs_path)
             if label == 'Webshell':
+                md5, sha1 = get_file_hashes(abs_path)
+                ext = get_file_extension(abs_path)
                 webshell_files.append({
                     "path": abs_path,
-                    "date": datetime.datetime.now().strftime("%d/%m/%Y")
+                    "date": file_date,
+                    "Hash_MD5": md5,
+                    "Hash_SHA-1": sha1,
+                    "Extension": ext
                 })
             else:
+                md5, sha1 = get_file_hashes(abs_path)
+                ext = get_file_extension(abs_path)
                 not_webshell_files.append({
                     "path": abs_path,
-                    "date": datetime.datetime.now().strftime("%d/%m/%Y")
+                    "date": file_date,
+                    "Hash_MD5": md5,
+                    "Hash_SHA-1": sha1,
+                    "Extension": ext
                 })
         except Exception as e:
             print(f"Unable to detect {abs_path}: {e}")
             unable_files.append({
                 "path": abs_path,
-                "error": str(e),
-                "date": datetime.datetime.now().strftime("%d/%m/%Y")
+                "comment": str(e),
+                "date": get_file_creation_date(abs_path)
             })
     elif os.path.isdir(file_path):
         total_files_found = scan_directory(file_path, predicter, webshell_files, not_webshell_files, unable_files, log_lines)
@@ -135,13 +182,16 @@ if __name__ == "__main__":
     log_dict = {
         "TotalFilesFound": total_files_found,
         "PotentialWebshells": len(webshell_files),
-        "NotWebshell": len(not_webshell_files), 
-        "TotalFilesIgnored": 0,
-        "UnreadableFile": len(unable_files),
-        "WebshellPaths": webshell_files,
-        "NotWebshellPaths": not_webshell_files,  
-        "FilesIgnoredPath": [],
-        "UnreadableFilePath": unable_files,
+        "NotWebshell": len(not_webshell_files),
+        "TotalFilesIgnored": len(unable_files),
+        "UnreadableFile": 0,
+        "WebshellPaths": webshell_files,  # Now a list of dicts with all required fields
+        "NotWebshellPaths": not_webshell_files,
+        "FilesIgnoredPath": [
+            {"path": f["path"], "comment": f["comment"]}
+            for f in unable_files
+        ],
+        "UnreadableFilePath": [],
         "ScanTime": scan_time
     }
 
