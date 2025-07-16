@@ -10,7 +10,7 @@ csv.field_size_limit(2**31 - 1)  # Increase field size limit for large CSVs
 
 class TFIDFCalculator:
     
-    IDF_DATASET_PATH = os.path.join(os.path.dirname(__file__), 'idf_dataset.csv')
+    IDF_DATASET_PATH = os.path.join(os.path.dirname(__file__), 'idf_values.csv')
     
     def __init__(self):
         pass
