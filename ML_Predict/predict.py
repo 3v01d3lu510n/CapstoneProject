@@ -12,13 +12,14 @@ class WebshellPredicter:
     entropyAnalyzer: Entropy.EntropyAnalyzer
     dataCharacteristics: DataCharacteristics.ASTAnalyzer
     tfidfCalculator: tfidf_calculator.TFIDFCalculator
-    model = joblib.load('random_forest_classifier.pkl')
+    MODEL_PATH = os.path.join(os.path.dirname(__file__), 'random_forest_classifier.pkl')
+    model = joblib.load(MODEL_PATH)
     
     def __init__(self):
         self.entropyAnalyzer = Entropy.EntropyAnalyzer()
         self.dataCharacteristics = DataCharacteristics.ASTAnalyzer()
         self.tfidfCalculator = tfidf_calculator.TFIDFCalculator()
-        self.model = joblib.load('random_forest_classifier.pkl')
+        self.model = joblib.load(self.MODEL_PATH)
         pass
     
     def get_entropies(self, file_path: str) -> float:
@@ -170,7 +171,6 @@ if __name__ == "__main__":
             print(f"Unable to detect {abs_path}: {e}")
             unable_files.append({
                 "path": abs_path,
-                "comment": str(e),
                 "date": get_file_creation_date(abs_path)
             })
     elif os.path.isdir(file_path):
@@ -187,7 +187,7 @@ if __name__ == "__main__":
         "WebshellPaths": webshell_files,  
         "NotWebshellPaths": not_webshell_files,
         "FilesIgnoredPath": [
-            {"path": f["path"], "comment": f["comment"]}
+            {"path": f["path"], "date": f["date"]}
             for f in unable_files
         ],
         "ScanTime": scan_time
