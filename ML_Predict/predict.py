@@ -195,8 +195,17 @@ if __name__ == "__main__":
         "ScanTime": scan_time
     }
 
-    # Write log to JSON file
-    log_file = "scan_log.json"
+    # Ensure log directory exists
+    log_dir = "log"
+    os.makedirs(log_dir, exist_ok=True)
+
+    # Count existing log files
+    existing_logs = [f for f in os.listdir(log_dir) if f.startswith("scan_log_") and f.endswith(".json")]
+    log_count = len(existing_logs) + 1
+
+    # Generate a unique log file name using log count
+    log_file = os.path.join(log_dir, f"scan_log_{log_count}.json")
+
     with open(log_file, "w", encoding="utf-8") as f:
         json.dump(log_dict, f, indent=4, ensure_ascii=False)
     print(f"Prediction results saved to {log_file}")
