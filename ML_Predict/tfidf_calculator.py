@@ -1,4 +1,4 @@
-import sys
+import sys, os
 import re
 import csv
 import subprocess
@@ -10,7 +10,7 @@ csv.field_size_limit(2**31 - 1)  # Increase field size limit for large CSVs
 
 class TFIDFCalculator:
     
-    idf_dataset = "idf_values.csv"
+    IDF_DATASET_PATH = os.path.join(os.path.dirname(__file__), 'idf_dataset.csv')
     
     def __init__(self):
         pass
@@ -75,7 +75,7 @@ class TFIDFCalculator:
         return tf_vector
     
     def get_tfidf_result(self, file_path):
-        unique_ngrams, idf_dict = self.load_idf(self.idf_dataset)
+        unique_ngrams, idf_dict = self.load_idf(self.IDF_DATASET_PATH)
         opcodes = self.extract_opcodes(file_path)
         tf_vector = self.compute_tf(unique_ngrams, opcodes)
         idf_vector = [idf_dict.get(ngram, 0.0) for ngram in unique_ngrams]
