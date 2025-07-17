@@ -42,17 +42,22 @@ git clone https://github.com/3v01d3lu510n/CapstoneProject.git
          Tool is being developed by IAP491_G5 
 =========================================================
 
-usage: phpshellhound.py [-h HELP] [-p PATH] [-l LOGPATH] [-s SUBDIR] [-y YARA] [-w WHITELIST] 
+usage: phpshellhound.py [-h] [-o] [-f] [-s TARGET] [-y Yara] [-r RULE] [-w TARGET] [-d RULE_NAME] [-g OUTPUT] [--bot]
 
 PHPShellHound - Scan PHP webshells.
 
 options:
   -h, --help            Show this help message and exit
-  -p, --path            Scan Path
-  -l, --logpath         Log file save path (Do not end with '/')
-  -f, --folder          Scan subdirectories
-  -w, --whitelist       Convert the file into a YARA rule to create a whitelist
-  -s , --start          Start scan webshells
+  -o, --output          Print "Hello World" from say.py
+  -f, --find-webroot    Find webroot using scanwr.py
+  -s TARGET, --scan TARGET
+                        Scan file/directory using ML (predict.py)
+  -y Yara               Folder/file to scan using YARA
+  -r RULE               YARA rule file
+  -w TARGET             File/directory to generate SHA1 rule
+  -d RULE_NAME          Custom rule name
+  -g OUTPUT             Output rule file name
+  --bot                 Run the Telegram bot.
   ```
 
 # Outstanding Issues
