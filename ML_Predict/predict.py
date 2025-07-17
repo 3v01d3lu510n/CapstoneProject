@@ -115,7 +115,6 @@ class WebshellPredicter:
                             "Extension": ext
                         })
                 except Exception as e:
-                    print(f"Unable to detect {abs_path}: {e}")
                     unable_files.append({
                         "path": abs_path,
                         "comment": str(e),
@@ -144,7 +143,7 @@ def scan_and_log(path):
                 "path": abs_path,
                 "date": file_date,
                 "Hash_MD5": md5,
-                 "Hash_SHA-1": sha1,
+                "Hash_SHA-1": sha1,
                 "Extension": ext
             }
             if label == 'Webshell':
@@ -152,7 +151,6 @@ def scan_and_log(path):
             else:
                 not_webshell_files.append(entry)
         except Exception as e:
-            print(f"Unable to detect {abs_path}: {e}")
             unable_files.append({
                 "path": abs_path,
                 "date": predicter.get_file_creation_date(abs_path)
@@ -193,6 +191,17 @@ def scan_and_log(path):
         ],
         "ScanTime": scan_time
     }
+    
+    print("Scanning...")
+    print("-----Results summary-----")
+    print(f"TotalFilesFound: {total_files_found}")
+    print(f"PotentialWebshells: {len(webshell_files)}")
+    print(f"NotWebshell: {len(not_webshell_files)}")
+    print(f"TotalFilesIgnored: {len(unable_files)}")
+    print(f"ScanTime: {scan_time}\n")
+    print("-----Webshells detected-----")
+    for f in webshell_files:
+        print(f"Webshell detected in {f['path']}")
 
     log_dir = "log"
     os.makedirs(log_dir, exist_ok=True)
@@ -204,7 +213,7 @@ def scan_and_log(path):
 
     with open(scan_log_file, "w", encoding="utf-8") as f:
         json.dump(scan_log_dict, f, indent=4, ensure_ascii=False)
-    print(f"Prediction results saved to {scan_log_file}")
+    print(f"\nPrediction results saved to {scan_log_file}")
         
     # Generate different summary log file names
     existing_summary_logs = [f for f in os.listdir(log_dir) if f.startswith("summary_log_") and f.endswith(".json")]
