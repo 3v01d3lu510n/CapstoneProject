@@ -8,17 +8,13 @@ import Imports.result as result_utils
 
 class WebshellPredicter:
     
-    entropyAnalyzer: Entropy.EntropyAnalyzer
-    dataCharacteristics: DataCharacteristics.ASTAnalyzer
-    tfidfCalculator: tfidf_calculator.TFIDFCalculator
+    entropyAnalyzer = Entropy.EntropyAnalyzer()
+    dataCharacteristics = DataCharacteristics.ASTAnalyzer()
+    tfidfCalculator = tfidf_calculator.TFIDFCalculator()
     MODEL_PATH = os.path.join(os.path.dirname(__file__), 'random_forest_classifier.pkl')
     model = joblib.load(MODEL_PATH)
     
     def __init__(self):
-        self.entropyAnalyzer = Entropy.EntropyAnalyzer()
-        self.dataCharacteristics = DataCharacteristics.ASTAnalyzer()
-        self.tfidfCalculator = tfidf_calculator.TFIDFCalculator()
-        self.model = joblib.load(self.MODEL_PATH)
         pass
     
     def get_entropies(self, file_path: str) -> float:
@@ -57,6 +53,36 @@ class WebshellPredicter:
         prediction = self.model.predict(features_df)
         
         return prediction[0]
+    
+    def predict_directory(self, directory: str) -> List[str]:
+        all_features = []
+        all_file_paths = []
+        webshell_files = []
+        not_webshell_files = []
+        unable_files = []
+        total_files_found = 0
+        for root, dirs, files in os.walk(directory):
+            for file in files:
+                total_files_found += 1
+                try:
+                    file_path = os.path.join(root, file)
+                    features = self.get_file_features(file_path)
+                    if features:
+                        all_features.append(features)
+                        all_file_paths.append(file_path)
+                except Exception as e:
+                    unable_files.append(file_path)
+                    
+        features_names = ['InfoEntropy', 'SpecialCharEntropy', 'QuoteEntropy', 'characteristics_flag'] + [f'tfidf_{i}' for i in range(len(features) - 4)]
+        features_df = pd.DataFrame(all_features, columns=features_names)
+        predictions = self.model.predict(features_df)
+        for prediction, file_path in zip(predictions, all_file_paths):
+            if prediction == 1:
+                webshell_files.append(file_path)
+            if prediction == 0:
+                not_webshell_files.append(file_path)
+        
+        return total_files_found, webshell_files, not_webshell_files, unable_files
 
 def scan_and_log(path):
     webshell_files = []
@@ -79,25 +105,13 @@ def scan_and_log(path):
             unable_files.append(path)
     elif os.path.isdir(path):
         abs_path = os.path.abspath(path)
-        for root, dirs, files in os.walk(abs_path):
-            for file in files:
-                file_path = os.path.join(root, file)
-                total_files_found += 1
-                try:
-                    result = predicter.predict_file(file_path)
-                    if result is None:
-                        unable_files.append(file_path)
-                    elif result == 1:
-                        webshell_files.append(file_path)
-                    else:
-                        not_webshell_files.append(file_path)
-                except Exception as e:
-                    unable_files.append(file_path)
+        total_files_found, webshell_files, not_webshell_files, unable_files = predicter.predict_directory(abs_path)
     else:
         print(f"Invalid path: {path}")
         return
     scan_time = datetime.datetime.now().strftime("%d/%m/%Y-%H:%M:%S")
     print("Scanning...")
+    print(f"Scanned in {end_time - start_time:.2f} seconds")
     print("-----Results summary-----")
     print(f"TotalFilesFound: {total_files_found}")
     print(f"PotentialWebshells: {len(webshell_files)}")
@@ -118,4 +132,12 @@ if __name__ == "__main__":
         sys.exit(1)
 
     path = sys.argv[1]
-    scan_and_log(path)
+    webshell_predicter = WebshellPredicter()
+    start_time = time.time()
+    total_files_found, webshell_files, not_webshell_files, unable_files = webshell_predicter.predict_directory(path)
+    end_time = time.time()
+    print("Scanned in {:.2f} seconds".format(end_time - start_time))
+    print(f"Total files found: {total_files_found}")
+    print(f"Webshell files detected: {len(webshell_files)}")
+    print(f"Not webshell files: {len(not_webshell_files)}")
+    print(f"Unable to process files: {len(unable_files)}")
