@@ -3,9 +3,8 @@ import sys, os
 from typing import List
 import pandas as pd
 import joblib
-import json
 import datetime
-import hashlib
+import Imports.result as result_utils
 
 class WebshellPredicter:
     
@@ -52,146 +51,52 @@ class WebshellPredicter:
         features = self.get_file_features(file_path)
         if not features:
             return None
-
+        
         features_names = ['InfoEntropy', 'SpecialCharEntropy', 'QuoteEntropy', 'characteristics_flag'] + [f'tfidf_{i}' for i in range(len(features) - 4)]
         features_df = pd.DataFrame([features], columns=features_names)
         prediction = self.model.predict(features_df)
-
+        
         return prediction[0]
-    
-    def get_file_hashes(self, file_path):
-        """Return MD5 and SHA-1 hashes for a file."""
-        hash_md5 = hashlib.md5()
-        hash_sha1 = hashlib.sha1()
-        try:
-            with open(file_path, "rb") as f:
-                for chunk in iter(lambda: f.read(4096), b""):
-                    hash_md5.update(chunk)
-                    hash_sha1.update(chunk)
-            return hash_md5.hexdigest(), hash_sha1.hexdigest()
-        except Exception as e:
-            return "", ""
-
-    def get_file_extension(self, file_path):
-        return '.' + os.path.splitext(file_path)[1].lstrip('.').lower()
-
-    def get_file_creation_date(self, file_path):
-        """Return the creation date of the file as dd/mm/YYYY."""
-        try:
-            ctime = os.path.getctime(file_path)
-            return datetime.datetime.fromtimestamp(ctime).strftime("%d/%m/%Y")
-        except Exception:
-            return ""
-
-    def scan_directory(self, dir_path, predicter, webshell_files, not_webshell_files, unable_files, log_lines):
-        total_files = 0
-        for root, _, files in os.walk(dir_path):
-            for file in files:
-                abs_path = os.path.abspath(os.path.join(root, file))
-                total_files += 1
-                try:
-                    result = predicter.predict_file(abs_path)
-                    label = 'Webshell' if result == 1 else 'Not a Webshell'
-                    log_lines.append(f"Prediction for file {abs_path}: {label}")
-                    file_date = self.get_file_creation_date(abs_path)
-                    if label == 'Webshell':
-                        md5, sha1 = self.get_file_hashes(abs_path)
-                        ext = self.get_file_extension(abs_path)
-                        webshell_files.append({
-                            "path": abs_path,
-                            "date": file_date,
-                            "Hash_MD5": md5,
-                            "Hash_SHA-1": sha1,
-                            "Extension": ext
-                        })
-                    else:
-                        md5, sha1 = self.get_file_hashes(abs_path)
-                        ext = self.get_file_extension(abs_path)
-                        not_webshell_files.append({
-                            "path": abs_path,
-                            "date": file_date,
-                            "Hash_MD5": md5,
-                            "Hash_SHA-1": sha1,
-                            "Extension": ext
-                        })
-                except Exception as e:
-                    unable_files.append({
-                        "path": abs_path,
-                        "comment": str(e),
-                        "date": self.get_file_creation_date(abs_path)
-                    })
-        return total_files
 
 def scan_and_log(path):
-    log_lines = []
     webshell_files = []
     not_webshell_files = []
     unable_files = []
     total_files_found = 0
     predicter = WebshellPredicter()
     if os.path.isfile(path):
-        abs_path = os.path.abspath(path)
-        total_files_found = 1
         try:
+            abs_path = os.path.abspath(path)
+            total_files_found = 1
             result = predicter.predict_file(abs_path)
-            label = 'Webshell' if result == 1 else 'Not a Webshell'
-            log_lines.append(f"Prediction for file {abs_path}: {label}")
-            file_date = predicter.get_file_creation_date(abs_path)
-            md5, sha1 = predicter.get_file_hashes(abs_path)
-            ext = predicter.get_file_extension(abs_path)
-            entry = {
-                "path": abs_path,
-                "date": file_date,
-                "Hash_MD5": md5,
-                "Hash_SHA-1": sha1,
-                "Extension": ext
-            }
-            if label == 'Webshell':
-                webshell_files.append(entry)
+            if result is None:
+                unable_files.append(abs_path)
+            elif result == 1:
+                webshell_files.append(abs_path)
             else:
-                not_webshell_files.append(entry)
+                not_webshell_files.append(abs_path)
         except Exception as e:
-            unable_files.append({
-                "path": abs_path,
-                "date": predicter.get_file_creation_date(abs_path)
-            })
+            unable_files.append(path)
     elif os.path.isdir(path):
-        total_files_found = predicter.scan_directory(
-            path, predicter, webshell_files, not_webshell_files, unable_files, log_lines
-        )
+        abs_path = os.path.abspath(path)
+        for root, dirs, files in os.walk(abs_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                total_files_found += 1
+                try:
+                    result = predicter.predict_file(file_path)
+                    if result is None:
+                        unable_files.append(file_path)
+                    elif result == 1:
+                        webshell_files.append(file_path)
+                    else:
+                        not_webshell_files.append(file_path)
+                except Exception as e:
+                    unable_files.append(file_path)
     else:
         print(f"Invalid path: {path}")
         return
-
     scan_time = datetime.datetime.now().strftime("%d/%m/%Y-%H:%M:%S")
-    scan_log_dict = {
-        "TotalFilesFound": total_files_found,
-        "PotentialWebshells": len(webshell_files),
-        "NotWebshell": len(not_webshell_files),
-        "TotalFilesIgnored": len(unable_files),
-        "WebshellPaths": webshell_files,
-        "NotWebshellPaths": not_webshell_files,
-        "FilesIgnoredPath": [
-            {"path": f["path"], "date": f["date"]}
-            for f in unable_files
-        ],
-        "ScanTime": scan_time
-    }
-        
-    summary_log_dict = {
-        "TotalFilesFound": total_files_found,
-        "PotentialWebshells": len(webshell_files),
-        "TotalFilesIgnored": len(unable_files),
-        "WebshellPaths": [
-            {"name": os.path.basename(f["path"])}
-            for f in webshell_files
-        ],
-        "FilesIgnoredPath": [
-            f["path"] for f in unable_files
-        ],
-        "ScanTime": scan_time
-    }
-    
     print("Scanning...")
     print("-----Results summary-----")
     print(f"TotalFilesFound: {total_files_found}")
@@ -201,28 +106,10 @@ def scan_and_log(path):
     print(f"ScanTime: {scan_time}\n")
     print("-----Webshells detected-----")
     for f in webshell_files:
-        print(f"Webshell detected in {f['path']}")
+        print(f"Webshell detected in {f}")
 
-    log_dir = "log"
-    os.makedirs(log_dir, exist_ok=True)
-        
-    # Generate different scan log file names
-    existing_scan_logs = [f for f in os.listdir(log_dir) if f.startswith("scan_log_") and f.endswith(".json")]
-    scan_log_count = len(existing_scan_logs) + 1
-    scan_log_file = os.path.join(log_dir, f"scan_log_{scan_log_count}.json")
-
-    with open(scan_log_file, "w", encoding="utf-8") as f:
-        json.dump(scan_log_dict, f, indent=4, ensure_ascii=False)
-    print(f"\nPrediction results saved to {scan_log_file}")
-        
-    # Generate different summary log file names
-    existing_summary_logs = [f for f in os.listdir(log_dir) if f.startswith("summary_log_") and f.endswith(".json")]
-    summary_log_count = len(existing_summary_logs) + 1
-    summary_log_file = os.path.join(log_dir, f"summary_log_{summary_log_count}.json")
-        
-    with open(summary_log_file, "w", encoding="utf-8") as f:
-        json.dump(summary_log_dict, f, indent=4, ensure_ascii=False)
-    print(f"Summary results saved to {summary_log_file}")
+    result_utils.create_log_file(total_files_found, webshell_files, not_webshell_files, unable_files)
+    result_utils.create_summary_file(total_files_found, webshell_files, unable_files)
         
 if __name__ == "__main__":
 
