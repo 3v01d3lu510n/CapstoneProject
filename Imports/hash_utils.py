@@ -1,7 +1,7 @@
 import os
 import sys
 import hashlib
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'yara2')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Yara')))
 from yara_utils import generate_whitelist_rule, append_whitelist_rule, append_hashes_to_rule
 def calculate_sha1(file_path):
     try:
