@@ -7,20 +7,18 @@ class EntropyAnalyzer:
     ):
         pass  # Placeholder for any initialization if needed
 
-    def calculate_info_entropy(self, file_path):
+    def calculate_info_entropy(self, file_bytes):
         # Calculates the Shannon entropy of a file based on byte frequency
         freq = {}
         size = 0
         try:
-            with open(file_path, 'rb') as f:
-                while True:
-                    byte = f.read(1)
-                    if not byte:
-                        break
-                    freq[byte] = freq.get(byte, 0) + 1
-                    size += 1
+            while True:
+                byte = file_bytes.read(1)
+                if not byte:
+                    break
+                freq[byte] = freq.get(byte, 0) + 1
+                size += 1
         except Exception as e:
-            print(f"[DEBUG] info_entropy unreadable for {file_path}: {e}")
             return None  # Return None if file can't be read
 
         if size == 0:
@@ -38,13 +36,11 @@ class EntropyAnalyzer:
         # Method to check for Chinese characters
         return '\u4e00' <= char <= '\u9fff'
 
-    def calculate_special_char_entropy(self, file_path):
+    def calculate_special_char_entropy(self, file_bytes):
         # Calculates special character entropy
         try:
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                content = f.read()
+            content = file_bytes.decode('utf-8', errors='ignore')
         except Exception as e:
-            print(f"[DEBUG] special_entropy unreadable for {file_path}: {e}")
             return None  # Return None if file can't be read
 
         # Length of characters of file (non space)
@@ -79,13 +75,11 @@ class EntropyAnalyzer:
         return entropy
 
 
-    def calculate_quote_entropy(self, file_path):
+    def calculate_quote_entropy(self, file_bytes):
         # Calculates quote entropy
         try:
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                content = f.read()
+            content = file_bytes.decode('utf-8', errors='ignore')
         except Exception as e:
-            print(f"[DEBUG] quote_entropy unreadable for {file_path}: {e}")
             return None  # Return None if file can't be read
 
         # Count character ' and "
@@ -123,19 +117,3 @@ class EntropyAnalyzer:
         quote_entropy = self.calculate_quote_entropy(file_path)
         entropies['quote_entropy'] = quote_entropy
         return entropies
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <file_path>")
-        sys.exit(1)
-        
-    file_path = sys.argv[1]
-    entropy_analyzer = EntropyAnalyzer()
-    
-    entropies = entropy_analyzer.get_file_entropies(file_path)
-    if entropies:
-        print(f"Entropy values for {file_path}:")
-        for key, value in entropies.items():
-            print(f"{key}: {value}")
-    else:
-        print(f"No entropy values calculated for {file_path}.")

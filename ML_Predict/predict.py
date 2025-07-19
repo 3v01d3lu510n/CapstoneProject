@@ -19,19 +19,20 @@ class WebshellPredicter:
     def __init__(self):
         pass
     
-    def get_entropies(self, file_path: str) -> float:
-        return self.entropyAnalyzer.get_file_entropies(file_path)
+    def get_entropies(self, file_bytes) -> float:
+        return self.entropyAnalyzer.get_file_entropies(file_bytes)
     
-    def get_data_characteristics_flag(self, file_path: str) -> int:
-        return self.dataCharacteristics.evaluate_file_characteristics(file_path)
+    def get_data_characteristics_flag(self, file_bytes) -> int:
+        return self.dataCharacteristics.evaluate_file_characteristics(file_bytes)
     
     def get_tfidf_result(self, file_path: str) -> List[float]:
         return self.tfidfCalculator.get_tfidf_result(file_path)
         
     def get_file_features(self, file_path: str) -> List[float]:
+        file_bytes = open(file_path, 'rb')
         try:
-            entropies = self.get_entropies(file_path)
-            characteristics_flag = self.get_data_characteristics_flag(file_path)
+            entropies = self.get_entropies(file_bytes)
+            characteristics_flag = self.get_data_characteristics_flag(file_bytes)
             tfidf_result = self.get_tfidf_result(file_path)
         
             features = [

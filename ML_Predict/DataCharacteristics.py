@@ -64,29 +64,12 @@ class ASTAnalyzer:
         result = find_exec_func_call(root)
         return result if result is not None else 0
     
-    def evaluate_file_characteristics(self, file_path):
+    def evaluate_file_characteristics(self, file_bytes):
         try:
-            with open(file_path, 'rb') as f:
-                code = f.read()
+            code = file_bytes.read()
             if not code.strip():
-                print(f"{file_path} is empty.")
                 return None
             return self.get_executetable_characteristics_flag(code)
         except Exception as e:
-            print(f"Error reading {file_path}: {e}")
             return None
 
-def main():
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <file_path>")
-        sys.exit(1)
-    file_path = sys.argv[1]
-    
-    dataCharacteristics = ASTAnalyzer()
-    
-    if os.path.isfile(file_path):
-        flag = dataCharacteristics.evaluate_file_characteristics(file_path)
-        print(f"Data Executable Characteristics Flag: {flag}")
-            
-if __name__ == "__main__":
-    main()
