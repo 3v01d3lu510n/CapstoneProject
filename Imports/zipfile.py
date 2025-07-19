@@ -2,16 +2,17 @@ import os
 import zipfile
 from datetime import datetime
 from typing import List
+from pathlib import Path
+
+def ensure_output_folder(folder_name: str = "output") -> Path:
+    folder_path = Path(folder_name)
+    folder_path.mkdir(parents=True, exist_ok=True)
+    return folder_path.resolve()
 
 def zip_all_malicious_files(detected_files: List[str], output_folder: str = "output", base_folder: str = ""):
-    if not detected_files:
-        print("No files to zip.")
-        return
-
-    os.makedirs(output_folder, exist_ok=True)
-
+    output_path = ensure_output_folder(output_folder)
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    zip_file_name = os.path.join(output_folder, f"Webshells_{timestamp}.zip")
+    zip_file_name = output_path / f"Webshells_{timestamp}.zip"
 
     try:
         with zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED) as zipf:

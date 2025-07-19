@@ -6,8 +6,7 @@ import re
 
 def generate_whitelist_rule(hash_data, rule_file):
     """
-    Generate an optimized YARA rule using the Bloom Filter approach.
-    Instead of comparing each hash with !=, use == with a not() wrapper.
+    Generate an optimized YARA rule
     """
     sha1_list = list(hash_data.values())
     
@@ -26,7 +25,6 @@ def generate_whitelist_rule(hash_data, rule_file):
         f.write("    condition:\n")
         f.write("        not (\n")
         
-        # Use Bloom Filter approach: == instead of !=
         hash_conditions = []
         for sha1 in sha1_list:
             hash_conditions.append(f'            hash.sha1(0, filesize) == "{sha1}"')
@@ -40,10 +38,6 @@ def append_hashes_to_rule(hash_data, rule_file, rule_name="whitelist_sha1"):
     """
     sha1_list = list(hash_data.values())
     
-    if not os.path.exists(rule_file):
-        print(f" Rule file not found: {rule_file}")
-        return False
-    
     # Read the current file
     with open(rule_file, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -53,7 +47,7 @@ def append_hashes_to_rule(hash_data, rule_file, rule_name="whitelist_sha1"):
     rule_match = re.search(rule_pattern, content, re.DOTALL)
     
     if not rule_match:
-        print(f" Rule '{rule_name}' not found in {rule_file}")
+        print(f"Rule '{rule_name}' not found in {rule_file}")
         return False
     
     rule_content = rule_match.group(1)
@@ -63,14 +57,14 @@ def append_hashes_to_rule(hash_data, rule_file, rule_name="whitelist_sha1"):
     condition_match = re.search(condition_pattern, rule_content, re.DOTALL)
     
     if not condition_match:
-        print(f" Condition not found in rule '{rule_name}'")
+        print(f"Condition not found in rule '{rule_name}'")
         return False
     
     existing_conditions = condition_match.group(1)
     
     # Create new hash conditions
     new_hash_conditions = []
-    for i, sha1 in enumerate(sha1_list):
+    for sha1 in sha1_list:
         new_hash_conditions.append(f'            hash.sha1(0, filesize) == "{sha1}"')
     
     # Add new hashes after the last hash line
@@ -81,7 +75,7 @@ def append_hashes_to_rule(hash_data, rule_file, rule_name="whitelist_sha1"):
             last_hash_line = i
     
     if last_hash_line == -1:
-        print(" No existing hash conditions found")
+        print("No existing hash conditions found")
         return False
     
     new_lines = lines[:last_hash_line + 1]
@@ -109,8 +103,8 @@ def append_hashes_to_rule(hash_data, rule_file, rule_name="whitelist_sha1"):
     new_content = re.sub(rule_pattern, f'rule {rule_name} {{{new_rule_content}}}', content, flags=re.DOTALL)
     with open(rule_file, 'w', encoding='utf-8') as f:
         f.write(new_content)
-    print(f" Added {len(sha1_list)} hashes to rule '{rule_name}' in {rule_file}")
-    print(f"   New total hashes: {new_total}")
+    print(f"Added {len(sha1_list)} hashes to rule '{rule_name}' in {rule_file}")
+    print(f"New total hashes: {new_total}")
     return True
 
 def append_whitelist_rule(hash_data, rule_file, rule_name=None):
@@ -143,7 +137,7 @@ def append_whitelist_rule(hash_data, rule_file, rule_name=None):
             hash_conditions.append(f'            hash.sha1(0, filesize) == "{sha1}"')
         f.write(" or\n".join(hash_conditions))
         f.write("\n        )\n}\n\n")
-    print(f" Appended rule '{rule_name}' with {len(sha1_list)} hashes to {rule_file}")
+    print(f"Appended rule '{rule_name}' with {len(sha1_list)} hashes to {rule_file}")
 
 def scan_with_yara(target_path, yara_rule_file):
     """Scan a file or directory with a YARA rule, supports Unicode filenames."""
@@ -153,7 +147,7 @@ def scan_with_yara(target_path, yara_rule_file):
     try:
         rules = yara.compile(filepath=yara_rule_file)
     except yara.Error as e:
-        print(f" Error loading YARA rule: {e}")
+        print(f"Error loading YARA rule: {e}")
         return
     detected = []
     total = 0
@@ -164,19 +158,14 @@ def scan_with_yara(target_path, yara_rule_file):
             with open(path, "rb") as f:
                 data = f.read()
         except Exception as e:
-            print(f"    Skipping file {path}: cannot open ({e})")
+            print(f"Skipping file {path}: cannot open ({e})")
             return
         try:
             matches = rules.match(data=data)
         except Exception as e:
-            print(f"    Scan error {path}: {e}")
+            print(f"Scan error {path}: {e}")
             return
         if matches:
-            print(f"\n DETECTED: {path}")
-            for m in matches:
-                print(f"   Rule: {m.rule}")
-                for k, v in m.meta.items():
-                    print(f"      {k}: {v}")
             detected.append(path)
     if os.path.isfile(target_path):
         scan_file(target_path)
@@ -184,12 +173,13 @@ def scan_with_yara(target_path, yara_rule_file):
         for fp in Path(target_path).rglob("*"):
             if fp.is_file():
                 scan_file(str(fp))
-    print(f"\n=== YARA SCAN SUMMARY ===")
-    print(f"Total files scanned: {total}")
-    print(f"Webshells detected: {len(detected)}")
     if detected:
         print("\nList:")
         for f in detected:
             print(f"   - {f}")
     else:
-        print(" No webshells detected!") 
+        print("No webshells detected!")
+    
+    print(f"\n=== YARA SCAN SUMMARY ===")
+    print(f"Total files scanned: {total}")
+    print(f"Webshells detected: {len(detected)}") 
