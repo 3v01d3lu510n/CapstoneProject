@@ -1,0 +1,14 @@
+{
+    "TotalFilesFound": 3,
+    "PotentialWebshells": 1,
+    "TotalFilesIgnored": 1,
+    "WebshellPaths": {
+        "name": [
+            "shellIDAL.class.php"
+        ]
+    },
+    "FilesIgnoredPath": [
+        "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\[ ~~Syrian Sh3ll~~ ]"
+    ],
+    "ScanTime": "19/07/2025-00:19:25"
+}

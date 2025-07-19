@@ -1,0 +1,28 @@
+{
+    "TotalFilesFound": 3,
+    "PotentialWebshells": 1,
+    "NotWebshell": 1,
+    "TotalFilesIgnored": 1,
+    "WebshellPaths": [
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\shellIDAL.class.php",
+            "CreationDate": "06/07/2025",
+            "Hash_MD5": "ea0d1ce094e38f6422c702181929b6a3",
+            "Hash_SHA-1": "5c3f74a31a43df6e7c3ba9d9f732b34d2c5e9f2a",
+            "Extension": ".php"
+        }
+    ],
+    "NotWebshellPaths": [
+        {
+            "path": "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\shellfile_controller.php",
+            "CreationDate": "06/07/2025",
+            "Hash_MD5": "c05fc3fad31979240fb27b8e876254b7",
+            "Hash_SHA-1": "b2df5f96f428b1c93149450e7246d2e142e6ada9",
+            "Extension": ".php"
+        }
+    ],
+    "FilesIgnoredPath": [
+        "C:\\Users\\dinht\\Documents\\RandomForest\\test_file\\[ ~~Syrian Sh3ll~~ ]"
+    ],
+    "ScanTime": "19/07/2025-00:19:25"
+}
