@@ -26,7 +26,7 @@ def get_file_hashes(file_path):
         print(f"An error occurred while hashing {file_path}: {e}")
         return None, None
 
-def create_log_file(total_files_found, webshell_files, unable_files, log_dir="logs", filename=None):
+def create_log_file(total_files_found, webshell_files, not_webshell_files,unable_files, log_dir="logs", filename=None):
     # Create a detailed log file JSON for a list of file paths (results after scan).
     # Create a folder 'logs' if it doesn't exist and save the file 'log+timescan.json'
     ensure_directory(log_dir)
@@ -35,14 +35,7 @@ def create_log_file(total_files_found, webshell_files, unable_files, log_dir="lo
     else:
         logs_path = os.path.join(log_dir, filename)
 
-    webshell_data = {
-        "path": [],
-        "CreationDate": [],
-        "Hash_MD5": [],
-        "Hash_SHA-1": [],
-        "Extension": []
-    }
-    
+    webshell_logs_list = []
     for path in webshell_files:
         try:
             creation_timestamp = os.path.getctime(path)
@@ -50,19 +43,43 @@ def create_log_file(total_files_found, webshell_files, unable_files, log_dir="lo
             md5, sha1 = get_file_hashes(path)
             _, extension = os.path.splitext(path)
 
-            webshell_data["path"].append(path)
-            webshell_data["CreationDate"].append(creation_date)
-            webshell_data["Hash_MD5"].append(md5)
-            webshell_data["Hash_SHA-1"].append(sha1)
-            webshell_data["Extension"].append(extension)
+            webshell_data = {
+                "path": path,
+                "CreationDate": creation_date,
+                "Hash_MD5": md5,
+                "Hash_SHA-1": sha1,
+                "Extension": extension
+            }
+            webshell_logs_list.append(webshell_data)
+        except Exception as e:
+            print(f"Could not process file {path}: {e}")
+
+    not_webshell_logs_list = []
+    for path in not_webshell_files:
+        try:
+            creation_timestamp = os.path.getctime(path)
+            creation_date = datetime.datetime.fromtimestamp(creation_timestamp).strftime('%d/%m/%Y')
+            md5, sha1 = get_file_hashes(path)
+            _, extension = os.path.splitext(path)
+
+            not_webshell_data = {
+                "path": path,
+                "CreationDate": creation_date,
+                "Hash_MD5": md5,
+                "Hash_SHA-1": sha1,
+                "Extension": extension
+            }
+            not_webshell_logs_list.append(not_webshell_data)
         except Exception as e:
             print(f"Could not process file {path}: {e}")
 
     log_content = {
         "TotalFilesFound": total_files_found,
         "PotentialWebshells": len(webshell_files),
+        "NotWebshell": len(not_webshell_files),
         "TotalFilesIgnored": len(unable_files),
-        "WebshellPaths": webshell_data,
+        "WebshellPaths": webshell_logs_list,
+        "NotWebshellPaths": not_webshell_logs_list,
         "FilesIgnoredPath": unable_files,
         "ScanTime": datetime.datetime.now().strftime("%d/%m/%Y-%H:%M:%S")
     }
@@ -87,7 +104,9 @@ def create_summary_file(total_files_found, webshell_files, unable_files, summary
         "WebshellPaths": {
             "name": [os.path.basename(p) for p in webshell_files]
         },
-        "FilesIgnoredPath": unable_files,
+        "FilesIgnoredPath": [
+            p for p in unable_files
+        ],
         "ScanTime": datetime.datetime.now().strftime("%d/%m/%Y-%H:%M:%S")
     }
 
