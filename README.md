@@ -48,15 +48,13 @@ PHPShellHound - Scan PHP webshells.
 
 options:
   -h, --help            Show this help message and exit
-  -o, --output          Print "Hello World" from say.py
-  -f, --find-webroot    Find webroot using scanwr.py
+  -f, --find-webroot    Finding webroot folder
   -s TARGET, --scan TARGET
-                        Scan file/directory using ML (predict.py)
-  -y Yara               Folder/file to scan using YARA
-  -r RULE               YARA rule file
+                        Scan file/directory using ML
+  -p PATH               Folder/file to scan using YARA
+  -y YARA               Path to YARA rule file
   -w TARGET             File/directory to generate SHA1 rule
-  -d RULE_NAME          Custom rule name
-  -g OUTPUT             Output rule file name
+  -o OUTPUT             Output rule file name
   --bot                 Run the Telegram bot.
   ```
 
