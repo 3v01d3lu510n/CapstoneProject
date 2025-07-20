@@ -3,10 +3,10 @@ import os
 from typing import List
 import pandas as pd
 import joblib
-import datetime
+import datetime, time
 import Imports.result as result_utils
-import time
 import concurrent.futures
+import Imports.zipfile as zip_utils
 
 class WebshellPredicter:
     
@@ -150,4 +150,4 @@ def scan_and_log(path):
 
     result_utils.create_log_file(total_files_found, webshell_files, not_webshell_files, unable_files)
     result_utils.create_summary_file(total_files_found, webshell_files, unable_files)
-        
+    zip_utils.zip_all_malicious_files(webshell_files, base_folder=path)
