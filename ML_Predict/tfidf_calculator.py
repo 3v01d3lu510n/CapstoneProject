@@ -13,6 +13,7 @@ class TFIDFCalculator:
     IDF_DATASET_PATH = os.path.join(os.path.dirname(__file__), 'idf_values.csv')
     
     def __init__(self):
+        self.unique_ngrams, self.idf_dict = self.load_idf(self.IDF_DATASET_PATH)
         pass
     
     def is_likely_opcode(self, token: str) -> bool:
@@ -75,10 +76,9 @@ class TFIDFCalculator:
         return tf_vector
     
     def get_tfidf_result(self, file_path):
-        unique_ngrams, idf_dict = self.load_idf(self.IDF_DATASET_PATH)
         opcodes = self.extract_opcodes(file_path)
-        tf_vector = self.compute_tf(unique_ngrams, opcodes)
-        idf_vector = [idf_dict.get(ngram, 0.0) for ngram in unique_ngrams]
+        tf_vector = self.compute_tf(self.unique_ngrams, opcodes)
+        idf_vector = [self.idf_dict.get(ngram, 0.0) for ngram in self.unique_ngrams]
         tfidf_vector = np.multiply(tf_vector, idf_vector).tolist()
         return tfidf_vector
     
