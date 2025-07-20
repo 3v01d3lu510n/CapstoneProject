@@ -115,6 +115,7 @@ def scan_and_log(path):
     total_files_found = 0
     predicter = WebshellPredicter()
     start_time = time.time()
+    print("Scanning...")
     if os.path.isfile(path):
         try:
             abs_path = os.path.abspath(path)
@@ -136,7 +137,6 @@ def scan_and_log(path):
         return
     end_time = time.time()
     scan_time = datetime.datetime.now().strftime("%d/%m/%Y-%H:%M:%S")
-    print("Scanning...")
     print(f"Scanned in {end_time - start_time:.2f} seconds")
     print("-----Results summary-----")
     print(f"TotalFilesFound: {total_files_found}")
