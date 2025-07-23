@@ -58,7 +58,7 @@ def load_target_files(target_path):
     detected_files = data.get("Detected", [])
     return target_files, detected_files
     
-def scan_files_and_log(log_prefix, files: List, detected_files=[], base_folder="logs"):
+def scan_files_and_log(files: List, detected_files=[], base_folder="logs"):
     predicter = WebshellPredicter()
     webshell_files = detected_files
     not_webshell_files = []
@@ -120,10 +120,10 @@ def ml_scan_and_log(path):
     else:
         print(f"Invalid path: {path}")
         return
-    scan_files_and_log("ml", files)
+    scan_files_and_log(files)
 
 def yara_scan_and_log(yara_log_file="logs\\log_yara.json"):
     target_files, detected_files = load_target_files(yara_log_file)
-    scan_files_and_log("yara", target_files, detected_files)
+    scan_files_and_log(target_files, detected_files)
     os.remove(yara_log_file)
     
