@@ -7,6 +7,7 @@ import datetime, time
 import Imports.result as result_utils
 import concurrent.futures
 import Imports.zipfile as zip_utils
+import json
 
 class WebshellPredicter:
     
@@ -31,7 +32,7 @@ class WebshellPredicter:
     def get_file_features(self, file_path: str) -> List[float]:
         file_bytes = open(file_path, 'rb')
         try:
-            entropies = self.get_entropies(file_bytes)
+            entropies = self.get_entropies(file_path)
             characteristics_flag = self.get_data_characteristics_flag(file_bytes)
             tfidf_result = self.get_tfidf_result(file_path)
         
@@ -107,7 +108,7 @@ class WebshellPredicter:
                 not_webshell_files.append(file_path)
 
         return total_files_found, webshell_files, not_webshell_files, unable_files
-    
+
 def scan_and_log(path):
     webshell_files = []
     not_webshell_files = []
@@ -148,6 +149,70 @@ def scan_and_log(path):
     # for f in webshell_files:
     #     print(f"Webshell detected in {f}")
 
-    result_utils.create_log_file(total_files_found, webshell_files, not_webshell_files, unable_files)
-    result_utils.create_summary_file(total_files_found, webshell_files, unable_files)
+    result_utils.create_log_file(total_files_found, webshell_files, not_webshell_files, unable_files, filename="scan_log.json")
+    result_utils.create_summary_file(total_files_found, webshell_files, unable_files, filename="summary_log.json")
     zip_utils.zip_all_malicious_files(webshell_files, base_folder=path)
+    
+def load_target_files(target_path):
+    # Get list of file to scan from yara JSON logs
+    if not os.path.isfile(target_path):
+        print(f"Invalid target path: {target_path}")
+        return []
+    
+    with open(target_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    return data.get("Files no detect", [])
+
+def scan_with_yara_log(yara_log_file):
+    """Quét các file trong target_path với rule YARA."""
+    files_no_detect = load_target_files(yara_log_file)
+    predicter = WebshellPredicter()
+    webshell_files = []
+    not_webshell_files = []
+    unable_files = []
+    start_times = time.time()
+    
+    def safe_extract(file_path):
+        try:
+            features = predicter.get_file_features(file_path)
+            if features:
+                return (file_path, features)
+            else:
+                return (file_path, None)
+        except Exception:
+            return (file_path, None)
+        
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = list(executor.map(safe_extract, files_no_detect))
+    
+    # Separate features and handle failures
+    valid_features = []
+    valid_file_paths = []
+    for file_path, features in results:
+        if features is None:
+            unable_files.append(file_path)
+        else:
+            valid_features.append(features)
+            valid_file_paths.append(file_path)
+
+    features_names = ['InfoEntropy', 'SpecialCharEntropy', 'QuoteEntropy', 'characteristics_flag'] + \
+                        [f'tfidf_{i}' for i in range(len(valid_features[0]) - 4)]
+
+    features_df = pd.DataFrame(valid_features, columns=features_names)
+    predictions = predicter.model.predict(features_df)
+
+    for prediction, file_path in zip(predictions, valid_file_paths):
+        if prediction == 1:
+            webshell_files.append(file_path)
+        elif prediction == 0:
+            not_webshell_files.append(file_path)
+    end_time = time.time()
+    print(f"Scanned {len(files_no_detect)} files in {end_time - start_times:.2f} seconds")
+    print(f"Total files scanned: {len(files_no_detect)}")
+    print(f"Webshells detected: {len(webshell_files)}")
+    print(f"Not webshells: {len(not_webshell_files)}")
+    print(f"FilesIgnored: {len(unable_files)}")
+    
+    result_utils.create_log_file(len(files_no_detect), webshell_files, not_webshell_files, unable_files, filename="yara_scan_log.json")
+    result_utils.create_summary_file(len(files_no_detect), webshell_files, not_webshell_files, unable_files, filename="yara_summary_log.json")
+    zip_utils.zip_all_malicious_files(webshell_files)
