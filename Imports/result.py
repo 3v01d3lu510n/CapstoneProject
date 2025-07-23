@@ -26,14 +26,13 @@ def get_file_hashes(file_path):
         print(f"An error occurred while hashing {file_path}: {e}")
         return None, None
 
-def create_log_file(total_files_found, webshell_files, not_webshell_files,unable_files, log_dir="logs", filename=None):
+def create_log_file(total_files_found, webshell_files, not_webshell_files,unable_files, log_dir="logs"):
     # Create a detailed log file JSON for a list of file paths (results after scan).
     # Create a folder 'logs' if it doesn't exist and save the file 'log+timescan.json'
     ensure_directory(log_dir)
-    if filename is None:
-        logs_path = os.path.join(log_dir, "log.json")
-    else:
-        logs_path = os.path.join(log_dir, filename)
+    existing_log = [f for f in os.listdir(log_dir) if "scan_log" in f]
+    count = len(existing_log)
+    logs_path = os.path.join(log_dir, f"scan_log_{count+1}.json")
 
     webshell_logs_list = []
     for path in webshell_files:
