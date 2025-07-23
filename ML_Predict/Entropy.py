@@ -1,5 +1,5 @@
-import sys
 import math
+from collections import Counter
 
 class EntropyAnalyzer:
     def __init__(
@@ -8,27 +8,14 @@ class EntropyAnalyzer:
         pass  # Placeholder for any initialization if needed
 
     def calculate_info_entropy(self, file_bytes):
-        # Calculates the Shannon entropy of a file based on byte frequency
-        freq = {}
-        size = 0
-        try:
-            while True:
-                byte = file_bytes.read(1)
-                if not byte:
-                    break
-                freq[byte] = freq.get(byte, 0) + 1
-                size += 1
-        except Exception as e:
-            return None  # Return None if file can't be read
-
+        size = len(file_bytes)
         if size == 0:
             return 0.0
-
+        freq = Counter(file_bytes)
         entropy = 0.0
         for count in freq.values():
             p = count / size
-            if p > 0: # Avoid math.log2(0)
-                entropy -= p * math.log2(p)
+            entropy -= p * math.log2(p)
         return entropy
 
     @staticmethod
@@ -36,84 +23,52 @@ class EntropyAnalyzer:
         # Method to check for Chinese characters
         return '\u4e00' <= char <= '\u9fff'
 
-    def calculate_special_char_entropy(self, file_bytes):
-        # Calculates special character entropy
-        try:
-            content = file_bytes.decode('utf-8', errors='ignore')
-        except Exception as e:
-            return None  # Return None if file can't be read
-
-        # Length of characters of file (non space)
-        content_no_space = content.replace(" ", "")
-        k = len(content_no_space)
-
+    def calculate_special_char_entropy(self, text):
+        # text is already a decoded string
+        content_no_space = (c for c in text if c != ' ')
+        chars = list(content_no_space)
+        k = len(chars)
         if k == 0:
             return 0.0
-
-        # a = number of characters that are not letters (a-zA-Z), numbers (0-9), or Chinese characters
-        a_chars = [
-            c for c in content_no_space 
-            if not (c.isalnum() or self._is_chinese_char(c))
-        ]
-        a = len(a_chars)
-
-        # b = number of characters that are not Chinese characters
-        b_chars = [c for c in content_no_space if not self._is_chinese_char(c)]
-        b = len(b_chars)
-
-        Pa = a / k if k > 0 else 0.0
-        Pb = b / k if k > 0 else 0.0
-        
+        a = sum(not (c.isalnum() or self._is_chinese_char(c)) for c in chars)
+        b = sum(not self._is_chinese_char(c) for c in chars)
+        Pa = a / k
+        Pb = b / k
         entropy = 0.0
-        # Calculate entropy contributions, avoiding log(0)
-        # Formula: -(Pa * log2(Pa) + Pb * log2(Pb))
         if Pa > 0:
             entropy -= Pa * math.log2(Pa)
         if Pb > 0:
             entropy -= Pb * math.log2(Pb)
-            
         return entropy
 
-
-    def calculate_quote_entropy(self, file_bytes):
-        # Calculates quote entropy
-        try:
-            content = file_bytes.decode('utf-8', errors='ignore')
-        except Exception as e:
-            return None  # Return None if file can't be read
-
-        # Count character ' and "
-        a_count = content.count("'")  # Count of character '
-        b_count = content.count('"')  # Count of character "
-
-        # Length of characters of file (non space)
-        content_no_space = content.replace(" ", "")
-        k = len(content_no_space)
-        
+    def calculate_quote_entropy(self, text):
+        # text is already a decoded strings
+        a_count = b_count = k = 0
+        for c in text:
+            if c != ' ':
+                k += 1
+                if c == "'":
+                    a_count += 1
+                elif c == '"':
+                    b_count += 1
         if k == 0:
             return 0.0
-            
         p_a = a_count / k
         p_b = b_count / k
-        
-        entropy_a = 0.0
-        entropy_b = 0.0
-        
-        if p_a > 0:
-            entropy_a = -p_a * math.log2(p_a)
-        if p_b > 0:
-            entropy_b = -p_b * math.log2(p_b)
-            
-        entropy = entropy_a + entropy_b
-        return entropy
+        entropy_a = -p_a * math.log2(p_a) if p_a > 0 else 0.0
+        entropy_b = -p_b * math.log2(p_b) if p_b > 0 else 0.0
+        return entropy_a + entropy_b
 
     def get_file_entropies(self, file_path):
-        # Analyzes a file for its various entropy values
+        try:
+            with open(file_path, "rb") as f:
+                file_bytes = f.read()
+        except Exception as e:
+            print(f"[DEBUG] unreadable for {file_path}: {e}")
+            return None
+        text = file_bytes.decode('utf-8', errors='ignore')
         entropies = dict()
-        info_entropy = self.calculate_info_entropy(file_path)
-        entropies['info_entropy'] = info_entropy
-        special_entropy = self.calculate_special_char_entropy(file_path)
-        entropies['special_entropy'] = special_entropy
-        quote_entropy = self.calculate_quote_entropy(file_path)
-        entropies['quote_entropy'] = quote_entropy
+        entropies['info_entropy'] = self.calculate_info_entropy(file_bytes)
+        entropies['special_entropy'] = self.calculate_special_char_entropy(text)
+        entropies['quote_entropy'] = self.calculate_quote_entropy(text)
         return entropies
