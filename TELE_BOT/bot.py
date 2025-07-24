@@ -112,64 +112,48 @@ async def forgot(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = str(update.effective_chat.id)
 
-    # Tìm username tương ứng chat_id
-    username = None
-    for u, chats in logged_in.items():
-        if chat_id in chats:
-            username = u
-            break
-
-    if username is None:
+    # Kiểm tra đã đăng nhập
+    if not any(chat_id in chats for chats in logged_in.values()):
         await update.message.reply_text("❌ Bạn chưa đăng nhập. Gửi /login để đăng nhập trước.")
         return
 
-    # Xử lý tham số
     idx = None
     filename_query = None
 
     if context.args:
         if context.args[0].isdigit():
             idx = int(context.args[0])
-            if idx <= 0:
-                await update.message.reply_text("❗ Số thứ tự log phải lớn hơn 0. Ví dụ: /info 1 tenfile.php.")
-                return
-            if len(context.args) < 2:
-                await update.message.reply_text("❗ Bạn cần nhập tên file. Ví dụ: /info 1 tenfile.php.")
+            if idx <= 0 or len(context.args) < 2:
+                await update.message.reply_text("❗ Ví dụ đúng: /info 1 tenfile.php.")
                 return
             filename_query = " ".join(context.args[1:]).lower().strip()
         else:
             filename_query = " ".join(context.args).lower().strip()
     else:
-        await update.message.reply_text("❗ Sử dụng đúng cú pháp: /info [số thứ tự log (optional)] <tên file>")
+        await update.message.reply_text("❗ Sử dụng đúng cú pháp: /info [số thứ tự log] <tên file>")
         return
 
-    # Xác định file log
     log_filename = f"scan_log_{idx}.json" if idx else "scan_log.json"
-    log_path = os.path.join(f"./users/{username}/logs", log_filename)
+    log_path = os.path.join("log", log_filename)
 
     if not os.path.exists(log_path):
         await update.message.reply_text(f"❗ Không tìm thấy file log {log_filename}.")
         return
 
     try:
-        with open(log_path, "r") as f:
+        with open(log_path, "r", encoding="utf-8") as f:
             log = json.load(f)
 
-        webshells = log.get("WebshellPaths", {"path": [], "date": []})
-        paths = webshells.get("path", [])
-        dates = webshells.get("date", [])
-
+        webshells = log.get("WebshellPaths", [])
         found = False
-        for i, p in enumerate(paths):
-            base_name = os.path.basename(p).lower()
+
+        for item in webshells:
+            base_name = os.path.basename(item.get("path", "")).lower()
             if filename_query == base_name:
                 found = True
-                created_time = dates[i] if i < len(dates) else "Không rõ"
-
-                # Escape nội dung
                 safe_base_name = html.escape(base_name)
-                safe_logged_path = html.escape(p)
-                safe_created_time = html.escape(created_time)
+                safe_logged_path = html.escape(item.get("path", "Không rõ"))
+                safe_created_time = html.escape(item.get("date", "Không rõ"))
 
                 await update.message.reply_text(
                     f"<b>📄 Thông tin chi tiết:</b>\n"
@@ -184,9 +168,6 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(f"❌ Không tìm thấy file {filename_query} trong {log_filename}.")
     except Exception as e:
         await update.message.reply_text(f"❗ Đã xảy ra lỗi khi đọc file log: {e}")
-
-
-
 
 async def delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = str(update.effective_chat.id)
@@ -260,22 +241,15 @@ async def delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"❗ Đã xảy ra lỗi khi xoá: {e}")
 
-
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = str(update.effective_chat.id)
 
-    # Tìm username tương ứng chat_id
-    username = None
-    for u, chats in logged_in.items():
-        if chat_id in chats:
-            username = u
-            break
-
-    if username is None:
+    # Kiểm tra đăng nhập
+    if not any(chat_id in chats for chats in logged_in.values()):
         await update.message.reply_text("❌ Bạn chưa đăng nhập. Gửi /login để đăng nhập trước.")
         return
 
-    # Đọc tham số số thứ tự (nếu có)
+    # Đọc số log từ lệnh /check [index]
     idx = None
     if context.args:
         try:
@@ -286,50 +260,83 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("❗ Tham số không hợp lệ. Ví dụ đúng: /check 1 hoặc chỉ /check.")
             return
 
-    # Xác định tên file log cần check
-    if idx is None:
-        log_filename = "scan_log.json"
-    else:
-        log_filename = f"scan_log_{idx}.json"
+    # Tìm username của người gửi
+    username = None
+    for user, chats in logged_in.items():
+        if chat_id in chats:
+            username = user
+            break
 
+    if not username:
+        await update.message.reply_text("❌ Không xác định được username.")
+        return
+
+    # Tạo đường dẫn tới log người dùng
     folder_path = f"./users/{username}/logs"
+    log_filename = f"scan_log_{idx}.json" if idx else "scan_log_1.json"
     log_path = os.path.join(folder_path, log_filename)
 
     if not os.path.exists(log_path):
-        await update.message.reply_text(f"❗ Không tìm thấy file log {log_filename}.")
+        await update.message.reply_text(f"❗ Không tìm thấy file log: {log_filename}")
         return
 
     try:
-        with open(log_path, "r") as f:
+        with open(log_path, "r", encoding="utf-8") as f:
             log = json.load(f)
 
-        scan_time = log.get("ScanTime", "N/A")
+        # Trích xuất dữ liệu
         total_files = log.get("TotalFilesFound", 0)
         potential_webshells = log.get("PotentialWebshells", 0)
-        webshells = log.get("WebshellPaths", {"path": [], "date": []})
+        not_webshell = log.get("NotWebshell", 0)
+        total_ignored = log.get("TotalFilesIgnored", 0)
+        scan_time = log.get("ScanTime", "N/A")
 
+        webshells = log.get("WebshellPaths", [])
+        ignored_paths = log.get("FilesIgnoredPath", [])
+
+        # Danh sách webshell chi tiết
         details = ""
-        for p, d in zip(webshells.get("path", []), webshells.get("date", [])):
-            details += f"• {p}\n  📅 Ngày phát hiện: {d}\n"
+        for item in webshells:
+            details += (
+                f"📁 File: {item.get('path', 'Không rõ')}\n"
+                f"📅 Ngày phát hiện: {item.get('CreationDate', 'Không rõ')}\n"
+                f"🧬 MD5: <code>{item.get('Hash_MD5', '')}</code>\n"
+                f"🔑 SHA-1: <code>{item.get('Hash_SHA-1', '')}</code>\n"
+                f"🧩 Phần đuôi file: {item.get('Extension', 'Không rõ')}\n\n"
+            )
 
-        safe_details = html.escape(details) or "Không có"
+        # Danh sách file bị bỏ qua
+        ignored_details = ""
+        for i, path in enumerate(ignored_paths):
+            ignored_details += f"{i+1}. {path}\n"
 
+        # Gửi báo cáo chính
         await update.message.reply_text(
             f"<b>📝 Kết quả quét từ {html.escape(log_filename)}:</b>\n"
-            f"- Ngày quét: {html.escape(datetime.datetime.now().strftime('%d/%m/%Y-%H:%M:%S'))}\n"
-            f"- Số file quét được: {total_files}\n"
-            f"- Số webshell nghi ngờ: {potential_webshells}\n"
-            f"- Webshells:\n<pre>{safe_details}</pre>\n"
-            f"- Thời gian scan: {html.escape(scan_time)}",
+            f"- 🧾 Tổng số file đã quét: {total_files}\n"
+            f"- ❗ Webshell nghi ngờ: {potential_webshells}\n"
+            f"- ✅ File sạch: {not_webshell}\n"
+            f"- 🚫 File không đọc được: {total_ignored}\n"
+            f"- 🕒 Thời gian quét: {html.escape(scan_time)}\n\n"
+            f"<b>📂 Danh sách Webshell:</b>\n<pre>{html.escape(details) or 'Không có'}</pre>",
             parse_mode="HTML"
         )
-        await update.message.reply_text("❕Bạn có thể tìm theo số thứ tự log. Ví dụ như: /check 1 sẽ là scan_log_1.json")
+
+        # Gửi danh sách file bị bỏ qua nếu có
+        if ignored_details:
+            await update.message.reply_text(
+                f"<b>🧾 Danh sách file bị bỏ qua:</b>\n<pre>{html.escape(ignored_details)}</pre>",
+                parse_mode="HTML"
+            )
+
+        await update.message.reply_text("ℹ️ Dùng /check [số] để xem các bản log khác. Ví dụ: /check 2")
+
     except Exception as e:
         await update.message.reply_text(f"❗ Đã xảy ra lỗi khi đọc file log: {e}")
 
 async def get(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = str(update.effetive_chat.id)
-
+    
+    chat_id = str(update.effective_chat.id)
     # Tìm username tương ứng chat_id
     username = None
     for u, chats in logged_in.items():
@@ -461,12 +468,37 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if user and user["password"] == state["password"]:
                 username = state["username"]
                 logged_in.setdefault(username, set()).add(chat_id)
+
+                # Tạo thư mục người dùng nếu chưa có
+                user_log_dir = f"./users/{username}/logs"
+                user_out_dir = f"./users/{username}/output"
+                os.makedirs(user_log_dir, exist_ok=True)
+                os.makedirs(user_out_dir, exist_ok=True)
+
+                import shutil
+
+                # Copy tất cả file từ ./logs vào ./users/{username}/logs
+                if os.path.exists("./logs"):
+                    for file in os.listdir("./logs"):
+                        src = os.path.join("./logs", file)
+                        dst = os.path.join(user_log_dir, file)
+                        if os.path.isfile(src):
+                            shutil.copy2(src, dst)
+
+                # Copy tất cả file từ ./output vào ./users/{username}/output
+                if os.path.exists("./output"):
+                    for file in os.listdir("./output"):
+                        src = os.path.join("./output", file)
+                        dst = os.path.join(user_out_dir, file)
+                        if os.path.isfile(src):
+                            shutil.copy2(src, dst)
+
                 await update.message.reply_text(f"✅ Đăng nhập thành công! Xin chào {username}.")
                 await update.message.reply_text("✅ Bạn đã đăng nhập rồi! Gửi /menu để xem các lệnh hỗ trợ.")
             else:
                 await update.message.reply_text("❌ Sai username hoặc mật khẩu. Vui lòng thử lại.")
-            del user_states[chat_id]
 
+            del user_states[chat_id]
     else:
         # Kiểm tra chat_id đã đăng nhập qua bất kỳ username nào
         found = False
@@ -493,8 +525,7 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(message, parse_mode="HTML")
 
-
-if __name__ == '__main__':
+def run_bot():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.post_init = setup_background_tasks  # chạy sau khi bot khởi động xong
@@ -508,9 +539,10 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler("get", get))
     app.add_handler(CommandHandler("info", info))
     app.add_handler(CommandHandler("delete", delete))
-
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 
     print("🤖 Bot đang chạy polling (v20+)...")
     app.run_polling()
 
+if __name__ == '__main__':
+    run_bot()
