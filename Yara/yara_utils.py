@@ -3,6 +3,8 @@ import os
 from pathlib import Path
 import yara
 import re
+import json
+
 
 def generate_whitelist_rule(hash_data, rule_file):
     """
@@ -132,41 +134,81 @@ def append_whitelist_rule(hash_data, rule_file, rule_name=None):
         f.write("        appended = true\n")
         f.write("    condition:\n")
         f.write("        not (\n")
-        hash_conditions = []
-        for sha1 in sha1_list:
-            hash_conditions.append(f'            hash.sha1(0, filesize) == "{sha1}"')
+        hash_conditions = [f'            hash.sha1(0, filesize) == "{sha1}"' for sha1 in sha1_list]
         f.write(" or\n".join(hash_conditions))
         f.write("\n        )\n}\n\n")
     print(f"Appended rule '{rule_name}' with {len(sha1_list)} hashes to {rule_file}")
 
-def scan_with_yara(target_path, yara_rule_file):
-    """Scan a file or directory with a YARA rule, supports Unicode filenames."""
-    print("=== YARA SCAN MODE ===")
-    print(f"Target: {target_path}")
-    print(f"YARA rule: {yara_rule_file}")
+def write_scan_log(files_no_detect, failed_to_scan, detected):
+    """Ghi log các file benign, file không quét được và file đã phát hiện ra logs/log_yara.json (dạng JSON)."""
+    logs_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'logs'))
+    if not os.path.exists(logs_dir):
+        os.makedirs(logs_dir)
+    log_path = os.path.join(logs_dir, 'log_yara.json')
+    log_data = {
+        "Detected": detected,
+        "Files no detect": files_no_detect,
+        "Failed to scan": failed_to_scan
+    }
+    with open(log_path, 'w', encoding='utf-8') as f:
+        json.dump(log_data, f, ensure_ascii=False, indent=2)
+    print(f"Logging to: {log_path}")
+
+def scan_with_all_rules(target_path, write_log=False, show_output=True):
+    """Tự động tìm tất cả file .yar trong Yara/rule/ và quét lần lượt từng rule."""
+    rule_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rule')
+    if not os.path.exists(rule_dir):
+        if show_output:
+            print(f"Rule directory not found: {rule_dir}")
+        return
+    rule_files = [os.path.join(rule_dir, f) for f in os.listdir(rule_dir) if f.endswith('.yar')]
+    if not rule_files:
+        if show_output:
+            print(f"No .yar rule files found in {rule_dir}")
+        return
+    for rule_file in rule_files:
+        if show_output:
+            print(f"\n--- Scanning with rule: {rule_file} ---")
+        scan_with_yara(target_path, rule_file, write_log=write_log, show_output=show_output)
+
+def scan_with_yara(target_path, yara_rule_file, write_log=False, show_output=True):
+    """Scan a file or directory with a YARA rule and optionally log results."""
+    if show_output:
+        print("=== YARA SCAN MODE ===")
+        print(f"Target: {target_path}")
+        print(f"YARA rule: {yara_rule_file}")
     try:
         rules = yara.compile(filepath=yara_rule_file)
     except yara.Error as e:
-        print(f"Error loading YARA rule: {e}")
+        if show_output:
+            print(f"Error loading YARA rule: {e}")
         return
     detected = []
+    files_no_detect = []
+    failed_to_scan = []
     total = 0
     def scan_file(path):
-        nonlocal detected, total
+        nonlocal detected, files_no_detect, failed_to_scan, total
         total += 1
         try:
             with open(path, "rb") as f:
                 data = f.read()
         except Exception as e:
-            print(f"Skipping file {path}: cannot open ({e})")
+            if show_output:
+                print(f"Skipping file {path}: cannot open ({e})")
+            failed_to_scan.append(path)
             return
         try:
             matches = rules.match(data=data)
         except Exception as e:
-            print(f"Scan error {path}: {e}")
+            if show_output:
+                print(f"Scan error {path}: {e}")
+            failed_to_scan.append(path)
             return
         if matches:
             detected.append(path)
+        else:
+            files_no_detect.append(path)
     if os.path.isfile(target_path):
         scan_file(target_path)
     else:
@@ -174,12 +216,20 @@ def scan_with_yara(target_path, yara_rule_file):
             if fp.is_file():
                 scan_file(str(fp))
     if detected:
-        print("\nList:")
-        for f in detected:
-            print(f"   - {f}")
+        if show_output:
+            print("\nList of Detected Files:")
+            for f in detected:
+                print(f"   - {f}")
     else:
-        print("No webshells detected!")
-    
-    print(f"\n=== YARA SCAN SUMMARY ===")
-    print(f"Total files scanned: {total}")
-    print(f"Webshells detected: {len(detected)}") 
+        if show_output:
+            print("\nNo webshells detected.")
+    if write_log:
+        write_scan_log(files_no_detect, failed_to_scan, detected)
+    if show_output:
+        print(f"\n=== YARA SCAN SUMMARY ===")
+        print(f"Total files scanned: {total}")
+        print(f"Webshells detected: {len(detected)}")
+        print(f"Files no detect: {len(files_no_detect)}")
+        if failed_to_scan:
+            print(f"Files that could not be scanned: {len(failed_to_scan)}") 
+        
