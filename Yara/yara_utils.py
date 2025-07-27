@@ -140,7 +140,7 @@ def append_whitelist_rule(hash_data, rule_file, rule_name=None):
     print(f"Appended rule '{rule_name}' with {len(sha1_list)} hashes to {rule_file}")
 
 def write_scan_log(files_no_detect, failed_to_scan, detected):
-    """Ghi log các file benign, file không quét được và file đã phát hiện ra logs/log_yara.json (dạng JSON)."""
+    """Log benign files, unscanned files and detected files to logs/log_yara.json (JSON format)."""
     logs_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'logs'))
     if not os.path.exists(logs_dir):
         os.makedirs(logs_dir)
@@ -155,7 +155,7 @@ def write_scan_log(files_no_detect, failed_to_scan, detected):
     print(f"Logging to: {log_path}")
 
 def scan_with_all_rules(target_path, write_log=False, show_output=True):
-    """Tự động tìm tất cả file .yar trong Yara/rule/ và quét lần lượt từng rule."""
+    """Automatically find all .yar files in Yara/rule/ and scan each rule in turn."""
     rule_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rule')
     if not os.path.exists(rule_dir):
         if show_output:
