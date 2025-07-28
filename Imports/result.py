@@ -73,7 +73,6 @@ def create_log_file(total_files_found, webshell_files, not_webshell_files,unable
             not_webshell_logs_list.append(not_webshell_data)
         except Exception as e:
             print(f"Could not process file {path}: {e}")
-
     # Write CSV log
     with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
         fieldnames = ["path", "CreationDate", "Hash_MD5", "Hash_SHA-1", "Extension"]
@@ -101,11 +100,9 @@ def create_log_file(total_files_found, webshell_files, not_webshell_files,unable
     with open(logs_path, 'w', encoding='utf-8') as f:
         json.dump(log_content, f, indent=4, ensure_ascii=False)
     print(f"Detailed log file saved at: {logs_path}")
-    print(f"Detailed CSV log file saved at: {csv_path}")
 
 def create_summary_file(total_files_found, webshell_files, unable_files, summary_dir="summary", filename=None):
     # Create a summary file JSON from a list of file paths (result after scan).
-    # Create a folder 'summary' if it doesn't exist and save the file 'summary+timescan.json'
     ensure_directory(summary_dir)
     existing_logs = [f for f in os.listdir(summary_dir) if "summary_log" in f]
     count = len(existing_logs)
@@ -126,9 +123,7 @@ def create_summary_file(total_files_found, webshell_files, unable_files, summary
     }
 
     with open(summary_path, 'w', encoding='utf-8') as f:
-        json.dump(summary_content, f, indent=4, ensure_ascii=False)
-    print(f"Summary file scanned webshell saved at: {summary_path}")
-
+        json.dump(summary_content, f, indent=4, ensure_ascii=False)    
     # Write CSV summary
     with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
         fieldnames = ["name", "ScanTime"]
@@ -136,4 +131,3 @@ def create_summary_file(total_files_found, webshell_files, unable_files, summary
         writer.writeheader()
         for p in webshell_files:
             writer.writerow({"name": os.path.basename(p), "ScanTime": scan_time})
-    print(f"Summary CSV file saved at: {csv_path}")
