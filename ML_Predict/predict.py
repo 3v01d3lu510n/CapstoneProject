@@ -58,7 +58,13 @@ def load_target_files(target_path):
     detected_files = data.get("Detected", [])
     return target_files, detected_files
     
-def scan_files_and_log(files: List, detected_files=[], base_folder="logs"):
+def yara_scan_and_log():
+    yara_log_file = os.path.join("logs", "log_yara.json")
+    target_files, detected_files = load_target_files(yara_log_file)
+    scan_files_and_log(target_files, detected_files)
+    os.remove(yara_log_file)
+    
+def scan_files_and_log(files: List, detected_files=[]):
     predicter = WebshellPredicter()
     webshell_files = detected_files
     not_webshell_files = []
@@ -102,7 +108,7 @@ def scan_files_and_log(files: List, detected_files=[], base_folder="logs"):
     end_time = time.time()
     print(f"Scanned in {end_time - start_time:.2f} seconds")
     print("-----Scan Summary-----")
-    print(f"TotalFilesFound: {len(files)}")
+    print(f"TotalFilesFound: {len(webshell_files) + len(not_webshell_files) + len(unable_files)}")
     print("-----Results Summary-----")
     print(f"PotentialWebshells: {len(webshell_files)}")
     print(f"NotWebshell: {len(not_webshell_files)}")
@@ -110,7 +116,7 @@ def scan_files_and_log(files: List, detected_files=[], base_folder="logs"):
     print("-----Output Summary-----")
     result_utils.create_log_file(len(files), webshell_files, not_webshell_files, unable_files)
     result_utils.create_summary_file(len(files), webshell_files, unable_files)
-    zip_utils.zip_all_malicious_files(webshell_files, base_folder=base_folder)
+    zip_utils.zip_all_malicious_files(webshell_files)
     
 def ml_scan_and_log(path):
     if os.path.isfile(path):
@@ -122,8 +128,3 @@ def ml_scan_and_log(path):
         return
     scan_files_and_log(files)
 
-def yara_scan_and_log(yara_log_file="logs\\log_yara.json"):
-    target_files, detected_files = load_target_files(yara_log_file)
-    scan_files_and_log(target_files, detected_files)
-    os.remove(yara_log_file)
-    
