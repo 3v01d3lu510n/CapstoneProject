@@ -91,10 +91,9 @@ def create_summary_file(total_files_found, webshell_files, unable_files, summary
     # Create a summary file JSON from a list of file paths (result after scan).
     # Create a folder 'summary' if it doesn't exist and save the file 'summary+timescan.json'
     ensure_directory(summary_dir)
-    if filename is None:
-        summary_path = os.path.join(summary_dir, "summary.json")
-    else:
-        summary_path = os.path.join(summary_dir, filename)
+    existing_logs = [f for f in os.listdir(summary_dir) if "summary_log" in f]
+    count = len(existing_logs)
+    summary_path = os.path.join(summary_dir, f"summary_log_{count}.json")
     
     summary_content = {
         "TotalFilesFound": total_files_found,
