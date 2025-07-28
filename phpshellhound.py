@@ -12,7 +12,7 @@ from Imports.zipfile import zip_all_malicious_files
 from Imports.findwr import find_webroot
 from Yara import yara_utils
 from Imports.hash_utils import handle_hash_generation
-# from TELE_BOT.bot import run_bot
+from TELE_BOT.bot import run_bot
 from ML_Predict.predict import ml_scan_and_log as scan_predict_main, yara_scan_and_log as auto_scan
 
 
@@ -40,8 +40,6 @@ def main():
     # Find Web root
     parser.add_argument("-r",'--root', metavar='WEBROOT', help="Tìm web root trên server")
 
-    # Zip file webshell
-    parser.add_argument("-z", "--zip", nargs='+', metavar="FILE", help="Danh sách file để nén lại vào một file zip trong thư mục output/")
     # YARA scan
     parser.add_argument("-y", metavar="Yara", help="Folder/file to scan with YARA CLI")
 
@@ -64,10 +62,7 @@ def main():
 
     elif args.root:
         find_webroot()
-
-    # Zip file 
-    elif args.zip:
-        zip_all_malicious_files(detected_files=args.zip)
+    
     # 2. YARA scan
     elif args.y and args.r:
         yara_utils.scan_with_yara(args.y, args.r)
