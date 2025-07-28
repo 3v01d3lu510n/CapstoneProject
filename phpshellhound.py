@@ -9,6 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'TELE_BOT'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'ML_Predict'))
 
 from Imports.zipfile import zip_all_malicious_files
+from Imports.findwr import find_webroot
 from Yara import yara_utils
 from Imports.hash_utils import handle_hash_generation
 # from TELE_BOT.bot import run_bot
@@ -30,16 +31,17 @@ def main():
 
     parser = argparse.ArgumentParser(description="PHPShellHound - Scan PHP webshells.")
 
-    #Auto scan
-    parser.add_argument("-a", "--auto", metavar="YARA_LOG", help="Tự động quét log YARA và lưu kết quả vào JSON + nén file độc hại")
+    # Auto scan
+    parser.add_argument("-a", "--auto", metavar="YARA_LOG", help="Tự động quét bằng Yara và ML")
 
     # ML-based detection
-    parser.add_argument('--scan', metavar='TARGET', help="Chạy quét webshell bằng ML (predict.py) trên file/thư mục")
+    parser.add_argument("-s",'--scan', metavar='TARGET', help="Chạy quét webshell bằng ML (predict.py) trên file/thư mục")
 
+    # Find Web root
+    parser.add_argument("-r",'--root', metavar='WEBROOT', help="Tìm web root trên server")
 
     # Zip file webshell
-    parser.add_argument("-z", "--zip", nargs='+', metavar="FILE", help="Danh sách file để nén lại vào một file zip trong thư mục output/"
-    )
+    parser.add_argument("-z", "--zip", nargs='+', metavar="FILE", help="Danh sách file để nén lại vào một file zip trong thư mục output/")
     # YARA scan
     parser.add_argument("-y", metavar="Yara", help="Folder/file to scan with YARA CLI")
 
@@ -59,6 +61,9 @@ def main():
     elif args.auto:
         yara_utils.scan_with_all_rules(args.auto, write_log=True, show_output=False)
         auto_scan()
+
+    elif args.root:
+        find_webroot()
 
     # Zip file 
     elif args.zip:

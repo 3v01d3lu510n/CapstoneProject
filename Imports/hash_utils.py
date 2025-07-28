@@ -25,45 +25,37 @@ def scan_directory(dir_path):
                 hash_data[file_path] = sha1
     return hash_data
 
-def process_output_argument(output_arg):
-    """Xử lý tham số -o và trả về output_file và rule_name"""
-    # Giả định thư mục /Yara đã tồn tại, chỉ tạo thư mục /Yara/rule nếu chưa có
-    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'yara'))
-    rule_dir = os.path.join(base_dir, 'rule')
-    if not os.path.exists(rule_dir):
-        os.makedirs(rule_dir)
-        print(f"Created directory: {rule_dir}")
-    
-    if output_arg == '':
-        from datetime import datetime
-        date_str = datetime.now().strftime("%d-%m-%Y")
-        output_file = os.path.join(rule_dir, f"file_rules_{date_str}.yar")
-        rule_name = f"file_rules_{date_str}"
-    else:
-        if not output_arg.endswith('.yar'):
-            output_arg = output_arg + '.yar'
-        output_file = os.path.join(rule_dir, output_arg)
-        rule_name = output_arg.replace('.yar', '')
-    
-    return output_file, rule_name
-
-def handle_hash_generation(target, output_file, rule_name):
-    """Handle hash and rule generation mode - automatically append if rule already exists"""
-    print("=== HASH GENERATION MODE ===")
+def print_hashes(target):
+    print("=== HASH ONLY MODE ===")
     print(f"Target: {target}")
-    print(f"Output: {output_file}")
-    
     if os.path.isfile(target):
         hash_data = scan_file(target)
     else:
         hash_data = scan_directory(target)
-    
+    if hash_data:
+        print(f"\nGenerated {len(hash_data)} hashes:")
+        for file_path, sha1 in hash_data.items():
+            print(f"  {file_path}: {sha1}")
+    else:
+        print("No files found to hash")
+
+def handle_hash_generation(target):
+    """Handle hash and rule generation mode - automatically append if rule already exists to rule_yara.yar with rule name whitelist_sha1"""
+    print("=== HASH GENERATION MODE ===")
+    print(f"Target: {target}")
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Yara'))
+    rule_dir = os.path.join(base_dir, 'rule')
+    if not os.path.exists(rule_dir):
+        os.makedirs(rule_dir)
+    output_file = os.path.join(rule_dir, 'rule_yara.yar')
+    rule_name = 'whitelist_sha1'
+    print(f"Output: {output_file}")
+    if os.path.isfile(target):
+        hash_data = scan_file(target)
+    else:
+        hash_data = scan_directory(target)
     if hash_data:
         print(f"Generated {len(hash_data)} hashes")
-        
-        # Luôn sử dụng rule name là whitelist_sha1
-        rule_name = "whitelist_sha1"
-        
         if os.path.exists(output_file):
             # Check if rule exists in file
             try:
