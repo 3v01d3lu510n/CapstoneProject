@@ -38,13 +38,13 @@ def main():
     parser.add_argument("-s",'--scan', metavar='TARGET', help="Chạy quét webshell bằng ML (predict.py) trên file/thư mục")
 
     # Find Web root
-    parser.add_argument("-r",'--root', metavar='WEBROOT', help="Tìm web root trên server")
+    parser.add_argument("-r", '--root', action='store_true', help="Tìm web root trên server")
 
     # YARA scan
-    parser.add_argument("-y", metavar="Yara", help="Folder/file to scan with YARA CLI")
-
+    parser.add_argument("-y", metavar="Yara", help="Folder/file để quét bằng YARA CLI (Không ghi log)")
+    parser.add_argument("-a", metavar="Yara", help="Folder/file để quét bằng YARA CLI (Có ghi log)")
     # SHA1-based rule generation
-    parser.add_argument("-w", metavar="TARGET", help="Folder/file to hash and generate rule")
+    parser.add_argument("-w", metavar="TARGET", help="Folder/file tạo rule hash")
     parser.add_argument("-o", "--output", nargs='?', const='', metavar="OUTPUT", help="Output YARA rule file (không nhập sẽ tạo file với date)")
 
     # Telegram bot
@@ -61,22 +61,21 @@ def main():
         auto_scan()
 
     elif args.root:
-        find_webroot()
+        print(find_webroot())
     
     # 2. YARA scan
-    elif args.y and args.r:
-        yara_utils.scan_with_yara(args.y, args.r)
-
-    # 3. Hash generation and rule creation
     elif args.y:
         yara_utils.scan_with_all_rules(args.y, write_log=False, show_output=True)
-
+        
+    elif args.a:
+        yara_utils.scan_with_all_rules(args.a, write_log=True, show_output=False)
+        
     elif args.w:
         if args.o:
             handle_hash_generation(args.w)
         else:
             print_hashes(args.w)
-
+            
     # 4. Telegram bot
     elif args.bot:
         asyncio.run(run_bot())
