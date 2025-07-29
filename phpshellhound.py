@@ -32,7 +32,7 @@ def main():
     parser = argparse.ArgumentParser(description="PHPShellHound - Scan PHP webshells.")
 
     # Auto scan
-    parser.add_argument("-a", "--auto", metavar="YARA_LOG", help="Tự động quét bằng Yara và ML")
+    parser.add_argument("-a", "--auto", help="Tự động quét bằng Yara và ML")
 
     # ML-based detection
     parser.add_argument("-s",'--scan', metavar='TARGET', help="Chạy quét webshell bằng ML (predict.py) trên file/thư mục")
