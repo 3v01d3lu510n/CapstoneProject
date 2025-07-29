@@ -42,7 +42,6 @@ def main():
 
     # YARA scan
     parser.add_argument("-y", metavar="Yara", help="Folder/file để quét bằng YARA CLI (Không ghi log)")
-    parser.add_argument("-a", metavar="Yara", help="Folder/file để quét bằng YARA CLI (Có ghi log)")
     # SHA1-based rule generation
     parser.add_argument("-w", metavar="TARGET", help="Folder/file tạo rule hash")
     parser.add_argument("-o", "--output", nargs='?', const='', metavar="OUTPUT", help="Output YARA rule file (không nhập sẽ tạo file với date)")
@@ -66,9 +65,6 @@ def main():
     # 2. YARA scan
     elif args.y:
         yara_utils.scan_with_all_rules(args.y, write_log=False, show_output=True)
-        
-    elif args.a:
-        yara_utils.scan_with_all_rules(args.a, write_log=True, show_output=False)
         
     elif args.w:
         if args.o:
