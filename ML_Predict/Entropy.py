@@ -24,7 +24,7 @@ class EntropyAnalyzer:
         return '\u4e00' <= char <= '\u9fff'
 
     def calculate_special_char_entropy(self, text):
-        # text is already a decoded string
+        # Text is already a decoded string
         content_no_space = (c for c in text if c != ' ')
         chars = list(content_no_space)
         k = len(chars)
@@ -42,7 +42,7 @@ class EntropyAnalyzer:
         return entropy
 
     def calculate_quote_entropy(self, text):
-        # text is already a decoded strings
+        # Text is already a decoded strings
         a_count = b_count = k = 0
         for c in text:
             if c != ' ':
