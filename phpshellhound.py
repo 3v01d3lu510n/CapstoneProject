@@ -44,7 +44,7 @@ def main():
     parser.add_argument("-y", metavar="Yara", help="Folder/file để quét bằng YARA CLI (Không ghi log)")
     # SHA1-based rule generation
     parser.add_argument("-w", metavar="TARGET", help="Folder/file tạo rule hash")
-    parser.add_argument("-o", "--output", nargs='?', const='', metavar="OUTPUT", help="Output YARA rule file (không nhập sẽ tạo file với date)")
+    parser.add_argument("-o", action="store_true", help="Output YARA rule file (không nhập sẽ tạo file với date)")
 
     # Telegram bot
     parser.add_argument('--bot', action='store_true', help="Chạy Telegram bot.")
