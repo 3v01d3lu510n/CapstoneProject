@@ -40,7 +40,7 @@ def print_hashes(target):
         print("No files found to hash")
 
 def handle_hash_generation(target):
-    """Handle hash and rule generation mode - automatically append if rule already exists to rule_yara.yar with rule name whitelist_sha1"""
+    # Handle hash and rule generation mode automatically append if rule already exists to rule_yara.yar with rule name whitelist_sha1
     print("=== HASH GENERATION MODE ===")
     print(f"Target: {target}")
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Yara'))
@@ -73,11 +73,9 @@ def handle_hash_generation(target):
                         print(f"New rule '{rule_name}' appended to {output_file}")
             except Exception as e:
                 print(f"Error checking existing file: {e}")
-                # Create new file if error
                 generate_whitelist_rule(hash_data, output_file)
                 print(f"Rule generated: {output_file}")
         else:
-            # File does not exist, create new
             print(f"Creating new rule file: {output_file}")
             generate_whitelist_rule(hash_data, output_file)
             print(f"Rule generated: {output_file}")
