@@ -21,15 +21,15 @@ class TFIDFCalculator:
         return (
             2 <= len(token) <= 15 and
             re.fullmatch(r'[A-Z_]+', token) is not None and
-            not all(c == token[0] for c in token)  # filter out repeated single chars
+            not all(c == token[0] for c in token)  # Filter out repeated single chars
         )
     
     def extract_opcodes(self, php_file: str) -> List[str]:
 
         cmd = [
             "phpdbg",
-            "-qrr",    # quiet + run & quit
-            "-p*",     # print all opcodes
+            "-qrr",    # Quiet + run & quit
+            "-p*",     # Print all opcodes
             php_file
         ]
 
