@@ -22,7 +22,7 @@ class EntropyAnalyzer:
                     size += 1
         except Exception as e:
             print(f"[DEBUG] info_entropy unreadable for {file_path}: {e}")
-            return None  # Return None if file can't be read
+            return None 
 
         if size == 0:
             return 0.0
@@ -46,23 +46,20 @@ class EntropyAnalyzer:
                 content = f.read()
         except Exception as e:
             print(f"[DEBUG] special_entropy unreadable for {file_path}: {e}")
-            return None  # Return None if file can't be read
-
-        # Length of characters of file (non space)
+            return None 
+            
         content_no_space = content.replace(" ", "")
         k = len(content_no_space)
 
         if k == 0:
             return 0.0
 
-        # a = number of characters that are not letters (a-zA-Z), numbers (0-9), or Chinese characters
         a_chars = [
             c for c in content_no_space 
             if not (c.isalnum() or self._is_chinese_char(c))
         ]
         a = len(a_chars)
 
-        # b = number of characters that are not Chinese characters
         b_chars = [c for c in content_no_space if not self._is_chinese_char(c)]
         b = len(b_chars)
 
@@ -93,7 +90,6 @@ class EntropyAnalyzer:
         a_count = content.count("'")  # Count of character '
         b_count = content.count('"')  # Count of character "
 
-        # Length of characters of file (non space)
         content_no_space = content.replace(" ", "")
         k = len(content_no_space)
         
@@ -123,7 +119,6 @@ class EntropyAnalyzer:
 
     def evaluate(self, info_entropy, special_entropy, quote_entropy):
         # Evaluates the entropy values against predefined thresholds
-        # result = []
         if info_entropy is None or special_entropy is None or quote_entropy is None:
             # If any calculation failed, mark as Unreadable for that part or whole
             # For simplicity, if any part is None, the whole evaluation might be affected.
