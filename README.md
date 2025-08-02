@@ -55,18 +55,13 @@ options:
   -s TARGET, --scan TARGET
                         Chạy quét webshell bằng ML (predict.py) trên file/thư mục
   -a [PATH], --auto [PATH]
-                        Tự động quét bằng Yara và ML. Dùng kèm -r hoặc --root để quét webroot.
+                        Tự động quét bằng Yara và ML. Dùng kèm -r hoặc --root để quét webroot
   -r, --root            Tìm web root và dùng với -a để quét webroot.
   -y Yara               Folder/file để quét bằng YARA CLI (Không ghi log)
   -w TARGET             Folder/file tạo rule hash
   -o                    Output YARA rule file (không nhập sẽ tạo file với date)
-  --bot                 Chạy Telegram bot.
+  -b, --bot             Chạy Telegram bot
   ```
-
-# Outstanding Issues
-## List of Unresolved Issues
-
-## Improvement Proposals
 
 # Project Detail
 For more detail, read [these documents](https://github.com/3v01d3lu510n/CapstoneProject/tree/main/Documents) 
