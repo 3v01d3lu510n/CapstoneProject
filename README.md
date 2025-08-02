@@ -36,26 +36,23 @@ git clone https://github.com/3v01d3lu510n/CapstoneProject.git
 =========================================================
   ___ _  _ ___  ___ _        _ _ _  _                  _ 
  | _ \ || | _ \/ __| |_  ___| | | || |___ _  _ _ _  __| |
- |  _/ __ |  _/\__ \ ' \/ -_) | | __ / _ \ || | ' \/ _` |
+ |  _/ __ |  _/\__ \ ' \/ -_) | | __ / _ \ || | ' \/ _  |
  |_| |_||_|_|  |___/_||_\___|_|_|_||_\___/\_,_|_||_\__,_|
-                                                                             
-         Tool is being developed by IAP491_G5 
+
+         Tool is being developed by IAP491_G5
 =========================================================
 
-usage: phpshellhound.py [-h] [-o] [-f] [-s TARGET] [-y Yara] [-r RULE] [-w TARGET] [-d RULE_NAME] [-g OUTPUT] [--bot]
-
-PHPShellHound - Scan PHP webshells.
-
 options:
-  -h, --help            Show this help message and exit
-  -f, --find-webroot    Finding webroot folder
+  -h, --help            show this help message and exit
   -s TARGET, --scan TARGET
-                        Scan file/directory using ML
-  -p PATH               Folder/file to scan using YARA
-  -y YARA               Path to YARA rule file
-  -w TARGET             File/directory to generate SHA1 rule
-  -o OUTPUT             Output rule file name
-  --bot                 Run the Telegram bot.
+                        Chạy quét webshell bằng ML (predict.py) trên file/thư mục
+  -a [PATH], --auto [PATH]
+                        Tự động quét bằng Yara và ML. Dùng kèm -r hoặc --root để quét webroot.
+  -r, --root            Tìm web root và dùng với -a để quét webroot.
+  -y Yara               Folder/file để quét bằng YARA CLI (Không ghi log)
+  -w TARGET             Folder/file tạo rule hash
+  -o                    Output YARA rule file (không nhập sẽ tạo file với date)
+  --bot                 Chạy Telegram bot.
   ```
 
 # Outstanding Issues
