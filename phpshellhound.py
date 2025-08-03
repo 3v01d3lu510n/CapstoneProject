@@ -38,7 +38,10 @@ def main():
     
     # Find Web root
     parser.add_argument("-r", "--root", action='store_true', help="Tìm web root và dùng với -a để quét webroot.")
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 
     # YARA scan
     parser.add_argument("-y", metavar="Yara", help="Folder/file để quét bằng YARA CLI (Không ghi log)")
