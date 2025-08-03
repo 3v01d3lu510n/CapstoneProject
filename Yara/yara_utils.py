@@ -5,10 +5,9 @@ import yara
 import re
 import json
 
+
 def generate_whitelist_rule(hash_data, rule_file):
-    """
-    Generate an optimized YARA rule
-    """
+    # Generate an optimized YARA rule
     sha1_list = list(hash_data.values())
     
     with open(rule_file, 'w', encoding='utf-8') as f:
@@ -34,9 +33,7 @@ def generate_whitelist_rule(hash_data, rule_file):
         f.write("\n        )\n}\n")
 
 def append_hashes_to_rule(hash_data, rule_file, rule_name="whitelist_sha1"):
-    """
-    Append new hashes to the existing rule instead of creating a new rule.
-    """
+    # Append new hashes to the existing rule instead of creating a new rule.
     sha1_list = list(hash_data.values())
     
     # Read the current file
@@ -109,9 +106,7 @@ def append_hashes_to_rule(hash_data, rule_file, rule_name="whitelist_sha1"):
     return True
 
 def append_whitelist_rule(hash_data, rule_file, rule_name=None):
-    """
-    Append a new YARA rule to the end of the file instead of overwriting.
-    """
+    # Append a new YARA rule to the end of the file instead of overwriting.
     sha1_list = list(hash_data.values())
     if rule_name is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -139,7 +134,7 @@ def append_whitelist_rule(hash_data, rule_file, rule_name=None):
     print(f"Appended rule '{rule_name}' with {len(sha1_list)} hashes to {rule_file}")
 
 def write_scan_log(files_no_detect, failed_to_scan, detected):
-    """Log benign files, unscanned files and detected files to logs/log_yara.json (JSON format)."""
+# Log benign files, unscanned files and detected files to logs/log_yara.json (JSON format).
     logs_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'logs'))
     if not os.path.exists(logs_dir):
         os.makedirs(logs_dir)
@@ -154,7 +149,7 @@ def write_scan_log(files_no_detect, failed_to_scan, detected):
     print(f"Logging to: {log_path}")
 
 def scan_with_all_rules(target_path, write_log=False, show_output=True):
-    """Automatically find all .yar files in Yara/rule/ and scan each rule in turn."""
+    # Automatically find all .yar files in Yara/rule/ and scan each rule in turn.
     rule_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rule')
     if not os.path.exists(rule_dir):
         if show_output:
@@ -171,7 +166,7 @@ def scan_with_all_rules(target_path, write_log=False, show_output=True):
         scan_with_yara(target_path, rule_file, write_log=write_log, show_output=show_output)
 
 def scan_with_yara(target_path, yara_rule_file, write_log=False, show_output=True):
-    """Scan a file or directory with a YARA rule and optionally log results."""
+    # Scan a file or directory with a YARA rule and optionally log results.
     if show_output:
         print("=== YARA SCAN MODE ===")
         print(f"Target: {target_path}")
@@ -232,3 +227,4 @@ def scan_with_yara(target_path, yara_rule_file, write_log=False, show_output=Tru
         if failed_to_scan:
             print(f"Files that could not be scanned: {len(failed_to_scan)}") 
         
+
