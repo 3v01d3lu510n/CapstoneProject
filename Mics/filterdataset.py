@@ -4,7 +4,7 @@ import argparse
 from collections import defaultdict
 
 def calculate_hash(file_path, hash_algorithm="md5", block_size=65536):
-    """Compute the hash of a file using the specified algorithm"""
+    # Compute the hash of a file using the specified algorithm
     hasher = hashlib.new(hash_algorithm)
     try:
         with open(file_path, 'rb') as f:
@@ -19,7 +19,7 @@ def calculate_hash(file_path, hash_algorithm="md5", block_size=65536):
         return None
 
 def find_duplicate_files(directory, hash_algo="md5", recursive=False, min_size=1):
-    """Find duplicate files in a directory"""
+    # Find duplicate files in a directory
     hashes = defaultdict(list)
     total_files = 0
     total_size = 0
@@ -134,3 +134,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
