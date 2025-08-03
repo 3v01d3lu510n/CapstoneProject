@@ -5,7 +5,6 @@ import yara
 import re
 import json
 
-
 def generate_whitelist_rule(hash_data, rule_file):
     """
     Generate an optimized YARA rule
