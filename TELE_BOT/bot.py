@@ -20,27 +20,28 @@ BOT_TOKEN = 'YOUR_BOT_TOKEN'
 
 REGISTER_FILE = 'registered_users.json'
 
+# Create users directory if not exists
 os.makedirs("./users", exist_ok=True)
 
-logged_in = {}  # Trạng thái đăng nhập: username ➔ set(chat_id)
-# Trạng thái tạm thời
-user_states = {}
+logged_in = {}  # Login status: username ➔ set(chat_id)
+user_states = {}  # Temporary state per chat_id
 
 def load_registered_users():
+    # Load registered users from JSON file
     if os.path.exists(REGISTER_FILE):
         try:
             with open(REGISTER_FILE) as f:
                 content = f.read().strip()
                 if not content:
-                    return {}  # file rỗng => trả về dict rỗng
+                    return {}  # Empty file ➔ return empty dict
                 return json.loads(content)
         except (json.JSONDecodeError, IOError) as e:
             print(f"[ERROR] Không thể đọc {REGISTER_FILE}: {e}")
             return {}
     return {}
 
-
 def save_registered_users(users):
+    # Save registered users to JSON file
     with open(REGISTER_FILE, 'w') as f:
         json.dump(users, f, indent=2)
 
@@ -58,7 +59,7 @@ async def logout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = str(update.effective_chat.id)
     username = None
 
-    # Tìm username mà chat_id đang đăng nhập
+    # Find the username that chat_id is logged into
     for u, chats in logged_in.items():
         if chat_id in chats:
             username = u
@@ -76,7 +77,7 @@ async def forgot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = str(update.effective_chat.id)
     users = load_registered_users()
 
-    # Tìm username từ logged_in
+    # Find username from logged_in state
     username = None
     for u, chats in logged_in.items():
         if chat_id in chats:
@@ -87,12 +88,12 @@ async def forgot(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Bạn chưa đăng nhập hoặc chưa đăng ký, không có tài khoản để xóa.")
         return
 
-    # Xoá tài khoản trong registered_users
+    # Delete account from registered_users
     if username in users:
         del users[username]
         save_registered_users(users)
 
-    # Xoá thư mục cá nhân nếu có
+    # Delete personal folder if exists
     user_folder = f"./users/{username}"
     if os.path.exists(user_folder):
         try:
@@ -101,10 +102,10 @@ async def forgot(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(f"❗ Lỗi khi xoá thư mục user: {e}")
             return
 
-    # Xoá trạng thái đăng nhập của username này
+    # Clear login state
     if username in logged_in:
         logged_in[username].discard(chat_id)
-        if not logged_in[username]:  # không còn ai đăng nhập username này
+        if not logged_in[username]:  # No one logged into this account
             del logged_in[username]
 
     await update.message.reply_text("🗑 Tài khoản và thư mục đã được xoá. Muốn sử dụng lại, hãy đăng ký mới bằng /register.")
@@ -112,7 +113,7 @@ async def forgot(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = str(update.effective_chat.id)
 
-    # Kiểm tra đã đăng nhập
+    # Check if user is logged in
     if not any(chat_id in chats for chats in logged_in.values()):
         await update.message.reply_text("❌ Bạn chưa đăng nhập. Gửi /login để đăng nhập trước.")
         return
@@ -120,6 +121,7 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     idx = None
     filename_query = None
 
+    # Parse arguments: index and filename
     if context.args:
         if context.args[0].isdigit():
             idx = int(context.args[0])
@@ -168,11 +170,10 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(f"❌ Không tìm thấy file {filename_query} trong {log_filename}.")
     except Exception as e:
         await update.message.reply_text(f"❗ Đã xảy ra lỗi khi đọc file log: {e}")
-
 async def delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = str(update.effective_chat.id)
 
-    # Tìm username tương ứng chat_id
+    # Find the username corresponding to this chat_id
     username = None
     for u, chats in logged_in.items():
         if chat_id in chats:
@@ -199,6 +200,7 @@ async def delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         deleted_any = False
 
+        # Delete all log files in logs/ folder
         if action in ("log", "all"):
             logs_path = os.path.join(folder_path, "logs")
             if os.path.exists(logs_path):
@@ -212,6 +214,7 @@ async def delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "🗑 Đã xoá tất cả file trong thư mục logs." if deleted_any else "ℹ️ Không có file nào trong thư mục logs để xoá."
                 )
 
+        # Delete all .zip files in output/ folder
         if action in ("zip", "all"):
             output_path = os.path.join(folder_path, "output")
             if os.path.exists(output_path):
@@ -225,11 +228,13 @@ async def delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "🗑 Đã xoá tất cả file zip trong thư mục output." if deleted_any else "ℹ️ Không có file zip nào trong thư mục output để xoá."
                 )
 
+        # Final message if action is 'all'
         if action == "all":
             await update.message.reply_text(
                 "🗑 Đã xoá tất cả file log và zip." if deleted_any else "ℹ️ Không có file log hoặc zip nào để xoá."
             )
 
+        # Invalid action keyword
         if action not in ("scanlog", "log", "zip", "all"):
             await update.message.reply_text(
                 "❗ Loại cần xoá không hợp lệ. Dùng:\n"
@@ -244,12 +249,12 @@ async def delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = str(update.effective_chat.id)
 
-    # Kiểm tra đăng nhập
+    # Check login
     if not any(chat_id in chats for chats in logged_in.values()):
         await update.message.reply_text("❌ Bạn chưa đăng nhập. Gửi /login để đăng nhập trước.")
         return
 
-    # Đọc số log từ lệnh /check [index]
+    # Read log index from command /check [index]
     idx = None
     if context.args:
         try:
@@ -260,7 +265,7 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("❗ Tham số không hợp lệ. Ví dụ đúng: /check 1 hoặc chỉ /check.")
             return
 
-    # Tìm username của người gửi
+    # Get username from chat_id
     username = None
     for user, chats in logged_in.items():
         if chat_id in chats:
@@ -271,7 +276,7 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Không xác định được username.")
         return
 
-    # Tạo đường dẫn tới log người dùng
+    # Build path to user’s log file
     folder_path = f"./users/{username}/logs"
     log_filename = f"scan_log_{idx}.json" if idx else "scan_log_1.json"
     log_path = os.path.join(folder_path, log_filename)
@@ -284,7 +289,7 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
         with open(log_path, "r", encoding="utf-8") as f:
             log = json.load(f)
 
-        # Trích xuất dữ liệu
+        # Extract data
         total_files = log.get("TotalFilesFound", 0)
         potential_webshells = log.get("PotentialWebshells", 0)
         not_webshell = log.get("NotWebshell", 0)
@@ -294,7 +299,7 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
         webshells = log.get("WebshellPaths", [])
         ignored_paths = log.get("FilesIgnoredPath", [])
 
-        # Danh sách webshell chi tiết
+        # Webshell file details
         details = ""
         for item in webshells:
             details += (
@@ -305,12 +310,12 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"🧩 Phần đuôi file: {item.get('Extension', 'Không rõ')}\n\n"
             )
 
-        # Danh sách file bị bỏ qua
+        # Ignored files
         ignored_details = ""
         for i, path in enumerate(ignored_paths):
             ignored_details += f"{i+1}. {path}\n"
 
-        # Gửi báo cáo chính
+        # Send report
         await update.message.reply_text(
             f"<b>📝 Kết quả quét từ {html.escape(log_filename)}:</b>\n"
             f"- 🧾 Tổng số file đã quét: {total_files}\n"
@@ -322,7 +327,7 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="HTML"
         )
 
-        # Gửi danh sách file bị bỏ qua nếu có
+        # Send ignored file list if available
         if ignored_details:
             await update.message.reply_text(
                 f"<b>🧾 Danh sách file bị bỏ qua:</b>\n<pre>{html.escape(ignored_details)}</pre>",
@@ -333,11 +338,9 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         await update.message.reply_text(f"❗ Đã xảy ra lỗi khi đọc file log: {e}")
-
 async def get(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    
     chat_id = str(update.effective_chat.id)
-    # Tìm username tương ứng chat_id
+    # Find username associated with chat_id
     username = None
     for u, chats in logged_in.items():
         if chat_id in chats:
@@ -376,7 +379,7 @@ async def poll_output_folders():
                 output_path = os.path.join(folder_path, "output")
                 os.makedirs(output_path, exist_ok=True)
 
-                # Đọc thời gian quét từ log, nếu có
+                # Read scan time from log file, if exists
                 log_path = os.path.join(folder_path, "scan_log.json")
                 scan_time = ""
                 if os.path.exists(log_path):
@@ -406,16 +409,18 @@ async def poll_output_folders():
             print(f"[FATAL] Lỗi trong poll_output_folders: {e}")
 
 async def setup_background_tasks(app):
+    # Start background task after bot starts
     app.create_task(poll_output_folders())
 
 async def error_handler(update, context):
+    # Catch all errors and print to console
     try:
         raise context.error
     except TelegramError as e:
         print(f"[ERROR] Telegram error: {e}")
     except Exception as e:
         print(f"[ERROR] Unhandled error: {e}")
-    raise ApplicationHandlerStop  # dừng xử lý update bị lỗi, không ảnh hưởng bot
+    raise ApplicationHandlerStop  # Stop processing faulty update
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = str(update.effective_chat.id)
@@ -425,7 +430,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if chat_id in user_states:
         state = user_states[chat_id]
 
-        # Xử lý đăng ký
+        # Handle registration steps
         if state["step"] == "ask_username_register":
             state["username"] = text
             state["step"] = "ask_password_register"
@@ -434,19 +439,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif state["step"] == "ask_password_register":
             state["password"] = text
 
-            # Kiểm tra username trùng
+            # Check if username already exists
             if state["username"] in users:
                 await update.message.reply_text("❌ Username đã được sử dụng. Vui lòng thử username khác bằng lệnh /register.")
                 del user_states[chat_id]
                 return
 
-            # Tạo thư mục theo username (không còn dính chat_id)
+            # Create user folder (no longer tied to chat_id)
             folder_path = f"./users/{state['username']}"
             os.makedirs(folder_path, exist_ok=True)
             os.makedirs(os.path.join(folder_path, "logs"), exist_ok=True)
             os.makedirs(os.path.join(folder_path, "output"), exist_ok=True)
 
-            # Ghi thông tin đăng ký
+            # Save registration info
             users[state["username"]] = {
                 "password": state["password"],
             }
@@ -455,7 +460,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(f"✅ Đăng ký thành công! Xin chào {state['username']}.\nThư mục riêng: {state['username']}")
             del user_states[chat_id]
 
-        # Xử lý đăng nhập
+        # Handle login steps
         elif state["step"] == "ask_username_login":
             state["username"] = text
             state["step"] = "ask_password_login"
@@ -469,7 +474,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 username = state["username"]
                 logged_in.setdefault(username, set()).add(chat_id)
 
-                # Tạo thư mục người dùng nếu chưa có
+                # Create user directories if not already exist
                 user_log_dir = f"./users/{username}/logs"
                 user_out_dir = f"./users/{username}/output"
                 os.makedirs(user_log_dir, exist_ok=True)
@@ -477,7 +482,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 import shutil
 
-                # Copy tất cả file từ ./logs vào ./users/{username}/logs
+                # Copy all files from ./logs to ./users/{username}/logs
                 if os.path.exists("./logs"):
                     for file in os.listdir("./logs"):
                         src = os.path.join("./logs", file)
@@ -485,7 +490,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         if os.path.isfile(src):
                             shutil.copy2(src, dst)
 
-                # Copy tất cả file từ ./output vào ./users/{username}/output
+                # Copy all files from ./output to ./users/{username}/output
                 if os.path.exists("./output"):
                     for file in os.listdir("./output"):
                         src = os.path.join("./output", file)
@@ -500,7 +505,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             del user_states[chat_id]
     else:
-        # Kiểm tra chat_id đã đăng nhập qua bất kỳ username nào
+        # If chat_id is already logged in with any account
         found = False
         for chats in logged_in.values():
             if chat_id in chats:
@@ -513,6 +518,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("🤖 Gửi /register hoặc /login để bắt đầu.")
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Display help menu
     message = (
         "<b>📋 Danh sách lệnh hỗ trợ:</b>\n\n"
         "/menu - Hiển thị menu\n"
@@ -526,9 +532,10 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(message, parse_mode="HTML")
 
 def run_bot():
+    # Main entry to start the bot
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    app.post_init = setup_background_tasks  # chạy sau khi bot khởi động xong
+    app.post_init = setup_background_tasks  # Run after bot startup
     app.add_error_handler(error_handler)
     app.add_handler(CommandHandler("register", register))
     app.add_handler(CommandHandler("login", login))
