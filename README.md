@@ -53,14 +53,14 @@ pip3 install -r requirements.txt
 options:
   -h, --help            show this help message and exit
   -s TARGET, --scan TARGET
-                        Chạy quét webshell bằng ML (predict.py) trên file/thư mục
+                        run a machine-learning (predict.py) webshell scan on the specified file or directory
   -a [PATH], --auto [PATH]
-                        Tự động quét bằng Yara và ML. Dùng kèm -r hoặc --root để quét webroot
-  -r, --root            Tìm web root và dùng với -a để quét webroot.
-  -y Yara               Folder/file để quét bằng YARA CLI (Không ghi log)
-  -w TARGET             Folder/file tạo rule hash
-  -o                    Output YARA rule file (không nhập sẽ tạo file với date)
-  -b, --bot             Chạy Telegram bot
+                        automatically scan with YARA and ML; use together with -r / --root to scan the detected webroot
+  -r, --root            locate the webroot; can also be used with -a
+  -y Yara               folder or file to scan with the YARA CLI (no logging)
+  -w TARGET             folder or file from which to generate hash-based YARA rules
+  -o                    output YARA rule file (if omitted, a date-stamped file is created)
+  -b, --bot             run the Telegram bot
   ```
 
 # Project Detail
