@@ -31,7 +31,7 @@ def create_log_file(total_files_found, webshell_files, not_webshell_files,unable
     # Create a detailed log file JSON for a list of file paths (results after scan).
     # Create a folder 'logs' if it doesn't exist and save the file 'log+timescan.json'
     ensure_directory(log_dir)
-    existing_log = [f for f in os.listdir(log_dir) if "scan_log" in f]
+    existing_log = [f for f in os.listdir(log_dir) if "scan_log" in f and ".json" in f]
     count = len(existing_log)
     logs_path = os.path.join(log_dir, f"scan_log_{count+1}.json")
     csv_path = os.path.join(log_dir, f"scan_log_{count+1}.csv")
@@ -101,13 +101,13 @@ def create_log_file(total_files_found, webshell_files, not_webshell_files,unable
         json.dump(log_content, f, indent=4, ensure_ascii=False)
     print(f"Detailed log file saved at: {logs_path}")
 
-def create_summary_file(total_files_found, webshell_files, unable_files, summary_dir="summary", filename=None):
+def create_summary_file(total_files_found, webshell_files, unable_files, summary_dir="logs"):
     # Create a summary file JSON from a list of file paths (result after scan).
     ensure_directory(summary_dir)
-    existing_logs = [f for f in os.listdir(summary_dir) if "summary_log" in f]
+    existing_logs = [f for f in os.listdir(summary_dir) if "summary_log" in f and ".json" in f]
     count = len(existing_logs)
-    summary_path = os.path.join(summary_dir, f"summary_log_{count}.json")
-    csv_path = os.path.join(summary_dir, f"summary_log_{count}.csv")
+    summary_path = os.path.join(summary_dir, f"summary_log_{count + 1}.json")
+    csv_path = os.path.join(summary_dir, f"summary_log_{count + 1}.csv")
     scan_time = datetime.datetime.now().strftime("%d/%m/%Y-%H:%M:%S")
     summary_content = {
         "TotalFilesFound": total_files_found,
