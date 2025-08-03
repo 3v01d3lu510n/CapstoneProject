@@ -31,22 +31,22 @@ def main():
     parser = argparse.ArgumentParser(description="PHPShellHound - Scan PHP webshells.")
 
     # ML-based detection
-    parser.add_argument("-s",'--scan', metavar='TARGET', help="Chạy quét webshell bằng ML (predict.py) trên file/thư mục")
+    parser.add_argument("-s",'--scan', metavar='TARGET', help="run a machine-learning (predict.py) webshell scan on the specified file or directory")
 
     # Auto scan
-    parser.add_argument("-a", "--auto", metavar="PATH", nargs="?", const="", help="Tự động quét bằng Yara và ML. Dùng kèm -r hoặc --root để quét webroot.")
+    parser.add_argument("-a", "--auto", metavar="PATH", nargs="?", const="", help="automatically scan with YARA and ML; use together with -r or --root to scan the detected webroot")
     
     # Find Web root
-    parser.add_argument("-r", "--root", action='store_true', help="Tìm web root và dùng với -a để quét webroot.")
+    parser.add_argument("-r", "--root", action='store_true', help="locate the webroot; can also be used with -a")
 
     # YARA scan
-    parser.add_argument("-y", metavar="Yara", help="Folder/file để quét bằng YARA CLI (Không ghi log)")
+    parser.add_argument("-y", metavar="Yara", help="folder or file to scan with the YARA CLI (no logging)")
     # SHA1-based rule generation
-    parser.add_argument("-w", metavar="TARGET", help="Folder/file tạo rule hash")
-    parser.add_argument("-o", action="store_true", help="Output YARA rule file (không nhập sẽ tạo file với date)")
+    parser.add_argument("-w", metavar="TARGET", help="folder or file from which to generate hash-based YARA rules")
+    parser.add_argument("-o", action="store_true", help="output YARA rule file (if omitted, a date-stamped file is created)")
 
     # Telegram bot
-    parser.add_argument('-b', '--bot', action='store_true', help="Chạy Telegram bot.")
+    parser.add_argument('-b', '--bot', action='store_true', help="run the Telegram bot")
 
     args = parser.parse_args()
 
