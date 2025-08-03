@@ -68,7 +68,7 @@ class EntropyAnalyzer:
             return None
         text = file_bytes.decode('utf-8', errors='ignore')
         entropies = dict()
-        entropies['info_entropy'] = self.calculate_info_entropy(file_bytes)
-        entropies['special_entropy'] = self.calculate_special_char_entropy(text)
-        entropies['quote_entropy'] = self.calculate_quote_entropy(text)
+        entropies['InfoEntropy'] = self.calculate_info_entropy(file_bytes)
+        entropies['SpecialCharEntropy'] = self.calculate_special_char_entropy(text)
+        entropies['QuoteEntropy'] = self.calculate_quote_entropy(text)
         return entropies
