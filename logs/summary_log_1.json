@@ -1,0 +1,34 @@
+{
+    "TotalFilesFound": 2980,
+    "PotentialWebshells": 23,
+    "TotalFilesIgnored": 0,
+    "WebshellPaths": {
+        "name": [
+            "01simple-download-pdf.php",
+            "AbstractPlatform.php",
+            "AccessCollections.php",
+            "access_1.php",
+            "acp_service.php",
+            "ActionsService.php",
+            "add_7.php",
+            "admin_12.php",
+            "adodb-pear.inc.php",
+            "adodb-time.inc_helper.php",
+            "AglInstaller.php",
+            "ajax-actions.php",
+            "ajax_4.php",
+            "Worksheet.php",
+            "wp-settings.php",
+            "wrapper.php",
+            "yiilite.php",
+            "zh.php",
+            "zhanzhanglogin.php",
+            "_themosisUserCore.scout.php",
+            "admin_21.php",
+            "WxPay.Config.php",
+            "_statisticsoutput_footer.php"
+        ]
+    },
+    "FilesIgnoredPath": [],
+    "ScanTime": "03/08/2025-13:41:53"
+}
