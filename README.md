@@ -55,7 +55,7 @@ options:
   -s TARGET, --scan TARGET
                         run a machine-learning (predict.py) webshell scan on the specified file or directory
   -a [PATH], --auto [PATH]
-                        automatically scan with YARA and ML; use together with -r / --root to scan the detected webroot
+                        automatically scan with YARA and ML; use together with -r or --root to scan the detected webroot
   -r, --root            locate the webroot; can also be used with -a
   -y Yara               folder or file to scan with the YARA CLI (no logging)
   -w TARGET             folder or file from which to generate hash-based YARA rules
