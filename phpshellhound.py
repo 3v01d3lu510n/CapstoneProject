@@ -46,7 +46,7 @@ def main():
     parser.add_argument("-o", action="store_true", help="Output YARA rule file (không nhập sẽ tạo file với date)")
 
     # Telegram bot
-    parser.add_argument('-o', '--bot', action='store_true', help="Chạy Telegram bot.")
+    parser.add_argument('-b', '--bot', action='store_true', help="Chạy Telegram bot.")
 
     args = parser.parse_args()
 
