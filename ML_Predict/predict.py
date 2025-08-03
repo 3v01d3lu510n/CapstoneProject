@@ -14,7 +14,7 @@ class WebshellPredicter:
     entropyAnalyzer = Entropy.EntropyAnalyzer()
     dataCharacteristics = DataCharacteristics.ASTAnalyzer()
     tfidfCalculator = tfidf_calculator.TFIDFCalculator()
-    MODEL_PATH = os.path.join(os.path.dirname(__file__), 'random_forest_classifier.pkl')
+    MODEL_PATH = os.path.join(os.path.dirname(__file__), 'extra_trees_classifier.pkl')
     model = joblib.load(MODEL_PATH)
     
     def __init__(self):
@@ -35,11 +35,10 @@ class WebshellPredicter:
             entropies = self.get_entropies(file_path)
             characteristics_flag = self.get_data_characteristics_flag(file_bytes)
             tfidf_result = self.get_tfidf_result(file_path)
-        
             features = [
-                entropies['info_entropy'],
-                entropies['special_entropy'],
-                entropies['quote_entropy'],
+                entropies['InfoEntropy'],
+                entropies['SpecialCharEntropy'],
+                entropies['QuoteEntropy'],
                 characteristics_flag
             ] + tfidf_result
         except Exception:
@@ -96,8 +95,10 @@ def scan_files_and_log(files: List, detected_files=[]):
     features_names = ['InfoEntropy', 'SpecialCharEntropy', 'QuoteEntropy', 'characteristics_flag'] + \
                         [f'tfidf_{i}' for i in range(len(valid_features[0]) - 4)] if valid_features else []
                         
+                        
     if valid_features:
         features_df = pd.DataFrame(valid_features, columns=features_names)
+        
         predictions = predicter.model.predict(features_df)
         for prediction, file_path in zip(predictions, valid_file_paths):
             if prediction == 1:
