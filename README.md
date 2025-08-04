@@ -59,7 +59,7 @@ options:
   -r, --root            locate the webroot; can also be used with -a
   -y Yara               folder or file to scan with the YARA CLI (no logging)
   -w TARGET             folder or file from which to generate hash-based YARA rules
-  -o                    output YARA rule file (if omitted, a date-stamped file is created)
+  -o                    output YARA rule file (if omitted path, automatically appends the new rules to the default file)
   -b, --bot             run the Telegram bot
   ```
 
