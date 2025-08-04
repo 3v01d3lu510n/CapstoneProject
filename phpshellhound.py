@@ -43,7 +43,7 @@ def main():
     parser.add_argument("-y", metavar="Yara", help="folder or file to scan with the YARA CLI (no logging)")
     # SHA1-based rule generation
     parser.add_argument("-w", metavar="TARGET", help="folder or file from which to generate hash-based YARA rules")
-    parser.add_argument("-o", action="store_true", help="output YARA rule file (if omitted, a date-stamped file is created)")
+    parser.add_argument("-o", action="store_true", help="output YARA rule file (if omitted path, automatically appends the new rules to the default file)")
 
     # Telegram bot
     parser.add_argument('-b', '--bot', action='store_true', help="run the Telegram bot")
