@@ -113,15 +113,20 @@ async def forgot(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = str(update.effective_chat.id)
 
-    # Check if user is logged in
-    if not any(chat_id in chats for chats in logged_in.values()):
+
+    username = None
+    for u, chats in logged_in.items():
+        if chat_id in chats:
+            username = u
+            break
+
+    if username is None:
         await update.message.reply_text("❌ Bạn chưa đăng nhập. Gửi /login để đăng nhập trước.")
         return
 
     idx = None
     filename_query = None
 
-    # Parse arguments: index and filename
     if context.args:
         if context.args[0].isdigit():
             idx = int(context.args[0])
@@ -135,8 +140,10 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❗ Sử dụng đúng cú pháp: /info [số thứ tự log] <tên file>")
         return
 
-    log_filename = f"scan_log_{idx}.json" if idx else "scan_log.json"
-    log_path = os.path.join("log", log_filename)
+    
+    folder_path = f"./users/{username}/logs"
+    log_filename = f"scan_log_{idx}.json" if idx else "scan_log_1.json"
+    log_path = os.path.join(folder_path, log_filename)
 
     if not os.path.exists(log_path):
         await update.message.reply_text(f"❗ Không tìm thấy file log {log_filename}.")
@@ -146,22 +153,28 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         with open(log_path, "r", encoding="utf-8") as f:
             log = json.load(f)
 
-        webshells = log.get("WebshellPaths", [])
+        all_files = log.get("WebshellPaths", []) + log.get("NotWebshellPaths", [])
         found = False
 
-        for item in webshells:
+        for item in all_files:
             base_name = os.path.basename(item.get("path", "")).lower()
             if filename_query == base_name:
                 found = True
                 safe_base_name = html.escape(base_name)
                 safe_logged_path = html.escape(item.get("path", "Không rõ"))
                 safe_created_time = html.escape(item.get("date", "Không rõ"))
+                safe_md5 = html.escape(item.get("Hash_MD5", "Không có"))
+                safe_sha1 = html.escape(item.get("Hash_SHA-1", "Không có"))
+                safe_ext = html.escape(item.get("Extension", "Không có"))
 
                 await update.message.reply_text(
                     f"<b>📄 Thông tin chi tiết:</b>\n"
                     f"- Tên file: {safe_base_name}\n"
                     f"- Đường dẫn lưu trong log: {safe_logged_path}\n"
-                    f"- Ngày phát hiện: {safe_created_time}",
+                    f"- Ngày phát hiện: {safe_created_time}\n"
+                    f"- MD5: <code>{safe_md5}</code>\n"
+                    f"- SHA1: <code>{safe_sha1}</code>\n"
+                    f"- Phần đuôi file: {safe_ext}",
                     parse_mode="HTML"
                 )
                 break
@@ -170,6 +183,7 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(f"❌ Không tìm thấy file {filename_query} trong {log_filename}.")
     except Exception as e:
         await update.message.reply_text(f"❗ Đã xảy ra lỗi khi đọc file log: {e}")
+    
 async def delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = str(update.effective_chat.id)
 
@@ -367,44 +381,39 @@ async def get(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             await update.message.reply_text(f"❗ Lỗi khi gửi file {os.path.basename(zip_file)}: {e}")
 
-async def poll_output_folders():
+async def poll_output_folders(app):
     print("[INFO] Bắt đầu kiểm tra định kỳ thư mục output...")
-    checked_files = {}
+    sent_files = set()
 
     while True:
         try:
             await asyncio.sleep(5)
-            for username, chat_ids in logged_in.items():
-                folder_path = f"./users/{username}"
-                output_path = os.path.join(folder_path, "output")
-                os.makedirs(output_path, exist_ok=True)
 
-                # Read scan time from log file, if exists
-                log_path = os.path.join(folder_path, "scan_log.json")
-                scan_time = ""
-                if os.path.exists(log_path):
-                    with open(log_path, "r") as f:
-                        try:
-                            log = json.load(f)
-                            scan_time = log.get("ScanTime", "N/A")
-                        except Exception as e:
-                            print(f"[ERROR] Lỗi đọc log {log_path}: {e}")
+            for username, chat_ids in logged_in.items():
+                output_path = os.path.join(f"./users/{username}", "output")
+                os.makedirs(output_path, exist_ok=True)
 
                 zip_files = glob.glob(os.path.join(output_path, "*.zip"))
                 for zip_file in zip_files:
-                    mtime = os.path.getmtime(zip_file)
-                    if checked_files.get(zip_file) != mtime:
-                        print(f"[ALERT] Phát hiện file mới cho username {username}: {zip_file}")
-                        for chat_id in chat_ids:
-                            try:
+                    if zip_file in sent_files:
+                        continue 
+
+                    for chat_id in chat_ids:
+                        try:
+                            with open(zip_file, "rb") as f:
                                 await app.bot.send_document(
                                     chat_id=chat_id,
-                                    document=open(zip_file, "rb"),
-                                    caption=f"🚨 Phát hiện webshell mới!\n🕒 Thời gian quét: {scan_time}"
+                                    document=f,
+                                    caption="🚨 Phát hiện webshell mới!",
                                 )
-                                checked_files[zip_file] = mtime
-                            except Exception as e:
-                                print(f"[ERROR] Gửi file cho chat {chat_id} thất bại: {e}")
+
+                            print(f"[INFO] Đã gửi file: {zip_file}")
+                            sent_files.add(zip_file) 
+                            break 
+                        except asyncio.TimeoutError:
+                            print(f"[ERROR] Gửi file {zip_file} thất bại: Timeout")
+                        except Exception as e:
+                            print(f"[ERROR] Gửi file {zip_file} thất bại: {e}")
         except Exception as e:
             print(f"[FATAL] Lỗi trong poll_output_folders: {e}")
 
@@ -553,3 +562,4 @@ def run_bot():
 
 if __name__ == '__main__':
     run_bot()
+
