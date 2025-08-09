@@ -27,7 +27,7 @@ def get_file_hashes(file_path):
         print(f"An error occurred while hashing {file_path}: {e}")
         return None, None
 
-def create_log_file(total_files_found, webshell_files, not_webshell_files,unable_files, log_dir="logs"):
+def create_log_file(total_files_found, webshell_files, not_webshell_files, unable_files, log_dir="logs"):
     # Create a detailed log file JSON for a list of file paths (results after scan).
     # Create a folder 'logs' if it doesn't exist and save the file 'log+timescan.json'
     ensure_directory(log_dir)
@@ -75,15 +75,17 @@ def create_log_file(total_files_found, webshell_files, not_webshell_files,unable
             print(f"Could not process file {path}: {e}")
     # Write CSV log
     with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
-        fieldnames = ["path", "CreationDate", "Hash_MD5", "Hash_SHA-1", "Extension"]
+        fieldnames = ["path", "Prediction", "CreationDate", "Hash_MD5", "Hash_SHA-1", "Extension"]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for item in webshell_logs_list:
+            item["Prediction"] = "Webshell" 
             writer.writerow(item)
         for item in not_webshell_logs_list:
+            item["Prediction"] = "Not Webshell"
             writer.writerow(item)
         for path in unable_files:
-            row = {"path": path, "CreationDate": "", "Hash_MD5": "", "Hash_SHA-1": "", "Extension": ""}
+            row = {"path": path, "Prediction": "Unable to detect", "CreationDate": "", "Hash_MD5": "", "Hash_SHA-1": "", "Extension": ""}
             writer.writerow(row)
 
     log_content = {
