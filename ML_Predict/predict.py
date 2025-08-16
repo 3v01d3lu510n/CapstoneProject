@@ -117,7 +117,8 @@ def scan_files_and_log(files: List, detected_files=[]):
     print("-----Output Summary-----")
     result_utils.create_log_file(len(files), webshell_files, not_webshell_files, unable_files)
     result_utils.create_summary_file(len(files), webshell_files, unable_files)
-    zip_utils.zip_all_malicious_files(webshell_files)
+    if webshell_files is not None:
+        zip_utils.zip_all_malicious_files(webshell_files)
     
 def ml_scan_and_log(path):
     if os.path.isfile(path):
