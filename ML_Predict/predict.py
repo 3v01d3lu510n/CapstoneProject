@@ -45,23 +45,6 @@ class WebshellPredicter:
             return None
         return features
     
-def load_target_files(target_path):
-    # Get list of file to scan from yara JSON logs
-    if not os.path.isfile(target_path):
-        print(f"Invalid target path: {target_path}")
-        return []
-    
-    with open(target_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    target_files = data.get("Files no detect", [])
-    detected_files = data.get("Detected", [])
-    return target_files, detected_files
-    
-def yara_scan_and_log():
-    yara_log_file = os.path.join("logs", "log_yara.json")
-    target_files, detected_files = load_target_files(yara_log_file)
-    scan_files_and_log(target_files, detected_files)
-    os.remove(yara_log_file)
     
 def scan_files_and_log(files: List, detected_files=[]):
     predicter = WebshellPredicter()
@@ -130,3 +113,20 @@ def ml_scan_and_log(path):
         return
     scan_files_and_log(files)
 
+def load_target_files(target_path):
+    # Get list of file to scan from yara JSON logs
+    if not os.path.isfile(target_path):
+        print(f"Invalid target path: {target_path}")
+        return []
+    
+    with open(target_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    target_files = data.get("Files no detect", [])
+    detected_files = data.get("Detected", [])
+    return target_files, detected_files 
+    
+def yara_scan_and_log():
+    yara_log_file = os.path.join("logs", "log_yara.json")
+    target_files, detected_files = load_target_files(yara_log_file)
+    scan_files_and_log(target_files, detected_files)
+    os.remove(yara_log_file)
