@@ -10,22 +10,18 @@ def ensure_directory(directory_name):
         os.makedirs(directory_name)
 
 def get_file_hashes(file_path):
-    # Calculates the MD5 and SHA-1 hashes of a file.
-    md5_hash = hashlib.md5()
     sha1_hash = hashlib.sha1()
     try:
         with open(file_path, "rb") as f:
-            # Read and update hash string value in blocks of 4096 bytes to avoid memory issues with large files
             for chunk in iter(lambda: f.read(4096), b""):
-                md5_hash.update(chunk)
                 sha1_hash.update(chunk)
-        return md5_hash.hexdigest(), sha1_hash.hexdigest()
+        return sha1_hash.hexdigest()
     except FileNotFoundError:
         print(f"Error: File not found at {file_path}")
-        return None, None
+        return None
     except Exception as e:
         print(f"An error occurred while hashing {file_path}: {e}")
-        return None, None
+        return None
 
 def create_log_file(total_files_found, webshell_files, not_webshell_files, unable_files, log_dir="logs"):
     # Create a detailed log file JSON for a list of file paths (results after scan).
@@ -41,13 +37,12 @@ def create_log_file(total_files_found, webshell_files, not_webshell_files, unabl
         try:
             creation_timestamp = os.path.getctime(path)
             creation_date = datetime.datetime.fromtimestamp(creation_timestamp).strftime('%d/%m/%Y')
-            md5, sha1 = get_file_hashes(path)
+            sha1 = get_file_hashes(path)
             _, extension = os.path.splitext(path)
 
             webshell_data = {
                 "path": path,
                 "CreationDate": creation_date,
-                "Hash_MD5": md5,
                 "Hash_SHA-1": sha1,
                 "Extension": extension
             }
@@ -60,13 +55,12 @@ def create_log_file(total_files_found, webshell_files, not_webshell_files, unabl
         try:
             creation_timestamp = os.path.getctime(path)
             creation_date = datetime.datetime.fromtimestamp(creation_timestamp).strftime('%d/%m/%Y')
-            md5, sha1 = get_file_hashes(path)
+            sha1 = get_file_hashes(path)
             _, extension = os.path.splitext(path)
 
             not_webshell_data = {
                 "path": path,
                 "CreationDate": creation_date,
-                "Hash_MD5": md5,
                 "Hash_SHA-1": sha1,
                 "Extension": extension
             }
@@ -75,7 +69,7 @@ def create_log_file(total_files_found, webshell_files, not_webshell_files, unabl
             print(f"Could not process file {path}: {e}")
     # Write CSV log
     with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
-        fieldnames = ["path", "Prediction", "CreationDate", "Hash_MD5", "Hash_SHA-1", "Extension"]
+        fieldnames = ["path", "Prediction", "CreationDate", "Hash_SHA-1", "Extension"]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for item in webshell_logs_list:
@@ -85,7 +79,7 @@ def create_log_file(total_files_found, webshell_files, not_webshell_files, unabl
             item["Prediction"] = "Not Webshell"
             writer.writerow(item)
         for path in unable_files:
-            row = {"path": path, "Prediction": "Unable to detect", "CreationDate": "", "Hash_MD5": "", "Hash_SHA-1": "", "Extension": ""}
+            row = {"path": path, "Prediction": "Unable to detect", "CreationDate": "", "Hash_SHA-1": "", "Extension": ""}
             writer.writerow(row)
 
     log_content = {
