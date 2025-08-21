@@ -161,7 +161,6 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 safe_base_name = html.escape(base_name)
                 safe_logged_path = html.escape(item.get("path", "Không rõ"))
                 safe_created_time = html.escape(item.get("date", "Không rõ"))
-                safe_md5 = html.escape(item.get("Hash_MD5", "Không có"))
                 safe_sha1 = html.escape(item.get("Hash_SHA-1", "Không có"))
                 safe_ext = html.escape(item.get("Extension", "Không có"))
 
@@ -170,7 +169,6 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     f"- Tên file: {safe_base_name}\n"
                     f"- Đường dẫn lưu trong log: {safe_logged_path}\n"
                     f"- Ngày phát hiện: {safe_created_time}\n"
-                    f"- MD5: <code>{safe_md5}</code>\n"
                     f"- SHA1: <code>{safe_sha1}</code>\n"
                     f"- Phần đuôi file: {safe_ext}",
                     parse_mode="HTML"
@@ -313,7 +311,6 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
             details += (
                 f"📁 File: {item.get('path', 'Không rõ')}\n"
                 f"📅 Ngày phát hiện: {item.get('CreationDate', 'Không rõ')}\n"
-                f"🧬 MD5: <code>{item.get('Hash_MD5', '')}</code>\n"
                 f"🔑 SHA-1: <code>{item.get('Hash_SHA-1', '')}</code>\n"
                 f"🧩 Phần đuôi file: {item.get('Extension', 'Không rõ')}\n\n"
             )
@@ -560,3 +557,4 @@ def run_bot():
 
 if __name__ == '__main__':
     run_bot()
+
