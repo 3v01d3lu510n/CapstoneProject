@@ -31,13 +31,20 @@ def load_registered_users():
             with open(REGISTER_FILE) as f:
                 content = f.read().strip()
                 if not content:
-                    return {}  # file rỗng => trả về dict rỗng
+                    return {}  
                 return json.loads(content)
         except (json.JSONDecodeError, IOError) as e:
             print(f"[ERROR] Không thể đọc {REGISTER_FILE}: {e}")
             return {}
     return {}
 
+async def require_login(update: Update) -> str:
+    chat_id = str(update.effective_chat.id)
+    for u, chats in logged_in.items():
+        if chat_id in chats:
+            return u, chat_id
+    await update.message.reply_text("❌ Bạn chưa đăng nhập. Gửi /login để đăng nhập trước.")
+    raise ApplicationHandlerStop
 
 def save_registered_users(users):
     with open(REGISTER_FILE, 'w') as f:
@@ -54,15 +61,8 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🔑 Vui lòng nhập username để đăng nhập:")
 
 async def logout(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = str(update.effective_chat.id)
-    username = None
-
-    # Tìm username mà chat_id đang đăng nhập
-    for u, chats in logged_in.items():
-        if chat_id in chats:
-            username = u
-            break
-
+    
+    username, chat_id = await require_login(update) 
     if username:
         logged_in[username].discard(chat_id)
         if not logged_in[username]:
@@ -72,20 +72,8 @@ async def logout(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Bạn chưa đăng nhập hoặc đã đăng xuất rồi.")
 
 async def forgot(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = str(update.effective_chat.id)
+    username, chat_id = await require_login(update) 
     users = load_registered_users()
-
-    # Tìm username từ logged_in
-    username = None
-    for u, chats in logged_in.items():
-        if chat_id in chats:
-            username = u
-            break
-
-    if username is None:
-        await update.message.reply_text("❌ Bạn chưa đăng nhập hoặc chưa đăng ký, không có tài khoản để xóa.")
-        return
-
     # Xoá tài khoản trong registered_users
     if username in users:
         del users[username]
@@ -103,25 +91,13 @@ async def forgot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Xoá trạng thái đăng nhập của username này
     if username in logged_in:
         logged_in[username].discard(chat_id)
-        if not logged_in[username]:  # không còn ai đăng nhập username này
+        if not logged_in[username]:
             del logged_in[username]
 
     await update.message.reply_text("🗑 Tài khoản và thư mục đã được xoá. Muốn sử dụng lại, hãy đăng ký mới bằng /register.")
 
 async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = str(update.effective_chat.id)
-
-    # Kiểm tra đã đăng nhập và lấy username
-    username = None
-    for u, chats in logged_in.items():
-        if chat_id in chats:
-            username = u
-            break
-
-    if username is None:
-        await update.message.reply_text("❌ Bạn chưa đăng nhập. Gửi /login để đăng nhập trước.")
-        return
-
+    username = await require_login(update) 
     idx = None
     filename_query = None
 
@@ -181,18 +157,7 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❗ Đã xảy ra lỗi khi đọc file log: {e}")
 
 async def delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = str(update.effective_chat.id)
-
-    # Tìm username tương ứng chat_id
-    username = None
-    for u, chats in logged_in.items():
-        if chat_id in chats:
-            username = u
-            break
-
-    if username is None:
-        await update.message.reply_text("❌ Bạn chưa đăng nhập. Gửi /login để đăng nhập trước.")
-        return
+    username = await require_login(update) 
 
     args = context.args
     if not args:
@@ -253,12 +218,7 @@ async def delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❗ Đã xảy ra lỗi khi xoá: {e}")
 
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = str(update.effective_chat.id)
-
-    # Kiểm tra đăng nhập
-    if not any(chat_id in chats for chats in logged_in.values()):
-        await update.message.reply_text("❌ Bạn chưa đăng nhập. Gửi /login để đăng nhập trước.")
-        return
+    username = await require_login(update) 
 
     # Đọc số log từ lệnh /check [index]
     idx = None
@@ -270,18 +230,7 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except ValueError:
             await update.message.reply_text("❗ Tham số không hợp lệ. Ví dụ đúng: /check 1 hoặc chỉ /check.")
             return
-
-    # Tìm username của người gửi
-    username = None
-    for user, chats in logged_in.items():
-        if chat_id in chats:
-            username = user
-            break
-
-    if not username:
-        await update.message.reply_text("❌ Không xác định được username.")
-        return
-
+        
     # Tạo đường dẫn tới log người dùng
     folder_path = f"./users/{username}/logs"
     log_filename = f"scan_log_{idx}.json" if idx else "scan_log_1.json"
@@ -310,9 +259,6 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
         for item in webshells:
             details += (
                 f"📁 File: {item.get('path', 'Không rõ')}\n"
-                f"📅 Ngày phát hiện: {item.get('CreationDate', 'Không rõ')}\n"
-                f"🔑 SHA-1: <code>{item.get('Hash_SHA-1', '')}</code>\n"
-                f"🧩 Phần đuôi file: {item.get('Extension', 'Không rõ')}\n\n"
             )
 
         # Danh sách file bị bỏ qua
@@ -346,17 +292,7 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def get(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
-    chat_id = str(update.effective_chat.id)
-    # Tìm username tương ứng chat_id
-    username = None
-    for u, chats in logged_in.items():
-        if chat_id in chats:
-            username = u
-            break
-
-    if username is None:
-        await update.message.reply_text("❌ Bạn chưa đăng nhập. Gửi /login để đăng nhập trước.")
-        return
+    username = await require_login(update) 
 
     folder_path = f"./users/{username}/output"
     zip_files = glob.glob(os.path.join(folder_path, "*.zip"))
@@ -518,12 +454,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("🤖 Gửi /register hoặc /login để bắt đầu.")
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = str(update.effective_chat.id)
-
-    # Kiểm tra đăng nhập nhanh gọn
-    if not any(chat_id in chats for chats in logged_in.values()):
-        await update.message.reply_text("❌ Bạn chưa đăng nhập. Gửi /login để đăng nhập trước.")
-        return
+    await require_login(update) 
     message = (
         "<b>📋 Danh sách lệnh hỗ trợ:</b>\n\n"
         "/menu - Hiển thị menu\n"
@@ -557,4 +488,3 @@ def run_bot():
 
 if __name__ == '__main__':
     run_bot()
-
