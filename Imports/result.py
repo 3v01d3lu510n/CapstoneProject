@@ -67,6 +67,22 @@ def create_log_file(total_files_found, webshell_files, not_webshell_files, unabl
             not_webshell_logs_list.append(not_webshell_data)
         except Exception as e:
             print(f"Could not process file {path}: {e}")
+
+    log_content = {
+        "TotalFilesFound": total_files_found,
+        "PotentialWebshells": len(webshell_files),
+        "NotWebshell": len(not_webshell_files),
+        "TotalFilesIgnored": len(unable_files),
+        "WebshellPaths": webshell_logs_list,
+        "NotWebshellPaths": not_webshell_logs_list,
+        "FilesIgnoredPath": unable_files,
+        "ScanTime": datetime.datetime.now().strftime("%d/%m/%Y-%H:%M:%S")
+    }
+    
+    with open(logs_path, 'w', encoding='utf-8') as f:
+        json.dump(log_content, f, indent=4, ensure_ascii=False)
+    print(f"Detailed log file saved at: {logs_path}")
+
     # Write CSV log
     with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
         fieldnames = ["path", "Prediction", "CreationDate", "Hash_SHA-1", "Extension"]
@@ -81,22 +97,7 @@ def create_log_file(total_files_found, webshell_files, not_webshell_files, unabl
         for path in unable_files:
             row = {"path": path, "Prediction": "Unable to detect", "CreationDate": "", "Hash_SHA-1": "", "Extension": ""}
             writer.writerow(row)
-
-    log_content = {
-        "TotalFilesFound": total_files_found,
-        "PotentialWebshells": len(webshell_files),
-        "NotWebshell": len(not_webshell_files),
-        "TotalFilesIgnored": len(unable_files),
-        "WebshellPaths": webshell_logs_list,
-        "NotWebshellPaths": not_webshell_logs_list,
-        "FilesIgnoredPath": unable_files,
-        "ScanTime": datetime.datetime.now().strftime("%d/%m/%Y-%H:%M:%S")
-    }
-
-    with open(logs_path, 'w', encoding='utf-8') as f:
-        json.dump(log_content, f, indent=4, ensure_ascii=False)
-    print(f"Detailed log file saved at: {logs_path}")
-
+            
 def create_summary_file(total_files_found, webshell_files, unable_files, summary_dir="logs"):
     # Create a summary file JSON from a list of file paths (result after scan).
     ensure_directory(summary_dir)
