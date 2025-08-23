@@ -53,12 +53,12 @@ def save_registered_users(users):
 async def register(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = str(update.effective_chat.id)
     user_states[chat_id] = {"step": "ask_username_register"}
-    await update.message.reply_text("📝 Please enter a username:")
+    await update.message.reply_text("📝 Please enter a username to register:")
 
 async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = str(update.effective_chat.id)
     user_states[chat_id] = {"step": "ask_username_login"}
-    await update.message.reply_text("🔑 Please enter your username:")
+    await update.message.reply_text("🔑 Please enter your username to login:")
 
 async def logout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username, chat_id = await require_login(update) 
@@ -486,3 +486,4 @@ def run_bot():
 
 if __name__ == '__main__':
     run_bot()
+
