@@ -61,17 +61,17 @@ def main():
         if args.root:
             target_path = find_webroot()
             if target_path:
-                print(f"[+] Webroot được phát hiện: {target_path}")
+                print(f"[+] Webroot detected: {target_path}")
             else:
-                print("[!] Không tìm thấy webroot.")
+                print("[!] Webroot not found.")
                 return
 
         if target_path and os.path.isdir(target_path):
-            print(f"[*] Quét thư mục: {target_path}")
+            print(f"[*] Scanning directory: {target_path}")
             yara_utils.scan_with_all_rules(target_path, write_log=True, show_output=False)
             auto_scan()
         else:
-            print(f"[!] Không thể quét. Thư mục không hợp lệ: {target_path}")
+            print(f"[!] Cannot scan. Invalid directory: {target_path}")
  
     elif args.root:
         print(find_webroot())
