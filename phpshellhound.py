@@ -72,7 +72,7 @@ def main():
             auto_scan()
         else:
             print(f"[!] Không thể quét. Thư mục không hợp lệ: {target_path}")
-
+ 
     elif args.root:
         print(find_webroot())
     
