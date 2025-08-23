@@ -72,6 +72,8 @@ def main():
             auto_scan()
         else:
             print(f"[!] Cannot scan. Invalid directory: {target_path}")
+        if args.bot:
+            asyncio.run(run_bot())
  
     elif args.root:
         print(find_webroot())
