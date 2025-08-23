@@ -34,7 +34,7 @@ def load_registered_users():
                     return {}  
                 return json.loads(content)
         except (json.JSONDecodeError, IOError) as e:
-            print(f"[ERROR] Không thể đọc {REGISTER_FILE}: {e}")
+            print(f"[ERROR] Cannot read {REGISTER_FILE}: {e}")
             return {}
     return {}
 
@@ -43,7 +43,7 @@ async def require_login(update: Update) -> str:
     for u, chats in logged_in.items():
         if chat_id in chats:
             return u, chat_id
-    await update.message.reply_text("❌ Bạn chưa đăng nhập. Gửi /login để đăng nhập trước.")
+    await update.message.reply_text("❌ You are not logged in. Send /login first.")
     raise ApplicationHandlerStop
 
 def save_registered_users(users):
@@ -53,23 +53,22 @@ def save_registered_users(users):
 async def register(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = str(update.effective_chat.id)
     user_states[chat_id] = {"step": "ask_username_register"}
-    await update.message.reply_text("📝 Vui lòng nhập tên đăng ký:")
+    await update.message.reply_text("📝 Please enter a username:")
 
 async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = str(update.effective_chat.id)
     user_states[chat_id] = {"step": "ask_username_login"}
-    await update.message.reply_text("🔑 Vui lòng nhập username để đăng nhập:")
+    await update.message.reply_text("🔑 Please enter your username:")
 
 async def logout(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    
     username, chat_id = await require_login(update) 
     if username:
         logged_in[username].discard(chat_id)
         if not logged_in[username]:
             del logged_in[username]
-        await update.message.reply_text("🚪 Bạn đã đăng xuất thành công. Hẹn gặp lại!")
+        await update.message.reply_text("🚪 You have logged out successfully. Goodbye!")
     else:
-        await update.message.reply_text("❌ Bạn chưa đăng nhập hoặc đã đăng xuất rồi.")
+        await update.message.reply_text("❌ You are not logged in or already logged out.")
 
 async def forgot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username, chat_id = await require_login(update) 
@@ -85,7 +84,7 @@ async def forgot(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             shutil.rmtree(user_folder)
         except Exception as e:
-            await update.message.reply_text(f"❗ Lỗi khi xoá thư mục user: {e}")
+            await update.message.reply_text(f"❗ Error deleting user folder: {e}")
             return
 
     # Delete login state of this username
@@ -94,7 +93,7 @@ async def forgot(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not logged_in[username]:
             del logged_in[username]
 
-    await update.message.reply_text("🗑 Tài khoản và thư mục đã được xoá. Muốn sử dụng lại, hãy đăng ký mới bằng /register.")
+    await update.message.reply_text("🗑 Account and folder deleted. Please register again with /register to continue using.")
 
 async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = await require_login(update) 
@@ -105,13 +104,13 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if context.args[0].isdigit():
             idx = int(context.args[0])
             if idx <= 0 or len(context.args) < 2:
-                await update.message.reply_text("❗ Ví dụ đúng: /info 1 tenfile.php.")
+                await update.message.reply_text("❗ Correct usage: /info 1 filename.php.")
                 return
             filename_query = " ".join(context.args[1:]).lower().strip()
         else:
             filename_query = " ".join(context.args).lower().strip()
     else:
-        await update.message.reply_text("❗ Sử dụng đúng cú pháp: /info [số thứ tự log] <tên file>")
+        await update.message.reply_text("❗ Usage: /info [log index] <filename>")
         return
 
     # 🔁 Read user log file
@@ -120,7 +119,7 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     log_path = os.path.join(folder_path, log_filename)
 
     if not os.path.exists(log_path):
-        await update.message.reply_text(f"❗ Không tìm thấy file log {log_filename}.")
+        await update.message.reply_text(f"❗ Log file {log_filename} not found.")
         return
 
     try:
@@ -135,26 +134,26 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if filename_query == base_name:
                 found = True
                 safe_base_name = html.escape(base_name)
-                safe_logged_path = html.escape(item.get("path", "Không rõ"))
-                safe_created_time = html.escape(item.get("date", "Không rõ"))
-                safe_sha1 = html.escape(item.get("Hash_SHA-1", "Không có"))
-                safe_ext = html.escape(item.get("Extension", "Không có"))
+                safe_logged_path = html.escape(item.get("path", "Unknown"))
+                safe_created_time = html.escape(item.get("date", "Unknown"))
+                safe_sha1 = html.escape(item.get("Hash_SHA-1", "Not available"))
+                safe_ext = html.escape(item.get("Extension", "Not available"))
 
                 await update.message.reply_text(
-                    f"<b>📄 Thông tin chi tiết:</b>\n"
-                    f"- Tên file: {safe_base_name}\n"
-                    f"- Đường dẫn lưu trong log: {safe_logged_path}\n"
-                    f"- Ngày phát hiện: {safe_created_time}\n"
+                    f"<b>📄 File details:</b>\n"
+                    f"- Filename: {safe_base_name}\n"
+                    f"- Logged path: {safe_logged_path}\n"
+                    f"- Date detected: {safe_created_time}\n"
                     f"- SHA1: <code>{safe_sha1}</code>\n"
-                    f"- Phần đuôi file: {safe_ext}",
+                    f"- Extension: {safe_ext}",
                     parse_mode="HTML"
                 )
                 break
 
         if not found:
-            await update.message.reply_text(f"❌ Không tìm thấy file {filename_query} trong {log_filename}.")
+            await update.message.reply_text(f"❌ File {filename_query} not found in {log_filename}.")
     except Exception as e:
-        await update.message.reply_text(f"❗ Đã xảy ra lỗi khi đọc file log: {e}")
+        await update.message.reply_text(f"❗ Error reading log file: {e}")
 
 async def delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = await require_login(update) 
@@ -162,10 +161,10 @@ async def delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
     if not args:
         await update.message.reply_text(
-            "❗ Sử dụng đúng cú pháp:\n"
-            "/delete log - Xoá tất cả file log trong thư mục logs\n"
-            "/delete zip - Xoá tất cả file zip trong thư mục output\n"
-            "/delete all - Xoá tất cả file log và zip"
+            "❗ Correct usage:\n"
+            "/delete log - Delete all log files in logs folder\n"
+            "/delete zip - Delete all zip files in output folder\n"
+            "/delete all - Delete all log and zip files"
         )
         return
 
@@ -185,7 +184,7 @@ async def delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         deleted_any = True
             if action == "log":
                 await update.message.reply_text(
-                    "🗑 Đã xoá tất cả file trong thư mục logs." if deleted_any else "ℹ️ Không có file nào trong thư mục logs để xoá."
+                    "🗑 All files in logs folder deleted." if deleted_any else "ℹ️ No files found in logs folder."
                 )
 
         if action in ("zip", "all"):
@@ -198,24 +197,24 @@ async def delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         deleted_any = True
             if action == "zip":
                 await update.message.reply_text(
-                    "🗑 Đã xoá tất cả file zip trong thư mục output." if deleted_any else "ℹ️ Không có file zip nào trong thư mục output để xoá."
+                    "🗑 All zip files in output folder deleted." if deleted_any else "ℹ️ No zip files found in output folder."
                 )
 
         if action == "all":
             await update.message.reply_text(
-                "🗑 Đã xoá tất cả file log và zip." if deleted_any else "ℹ️ Không có file log hoặc zip nào để xoá."
+                "🗑 All log and zip files deleted." if deleted_any else "ℹ️ No log or zip files found."
             )
 
         if action not in ("scanlog", "log", "zip", "all"):
             await update.message.reply_text(
-                "❗ Loại cần xoá không hợp lệ. Dùng:\n"
-                "/delete log - Xoá tất cả file trong logs\n"
-                "/delete zip - Xoá file zip trong output\n"
-                "/delete all - Xoá tất cả file log và zip"
+                "❗ Invalid delete type. Use:\n"
+                "/delete log - Delete all files in logs\n"
+                "/delete zip - Delete zip files in output\n"
+                "/delete all - Delete all log and zip files"
             )
 
     except Exception as e:
-        await update.message.reply_text(f"❗ Đã xảy ra lỗi khi xoá: {e}")
+        await update.message.reply_text(f"❗ Error while deleting: {e}")
 
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = await require_login(update) 
@@ -228,7 +227,7 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if idx <= 0:
                 raise ValueError
         except ValueError:
-            await update.message.reply_text("❗ Tham số không hợp lệ. Ví dụ đúng: /check 1 hoặc chỉ /check.")
+            await update.message.reply_text("❗ Invalid parameter. Example: /check 1 or just /check.")
             return
         
     # Build path to user's log file
@@ -237,7 +236,7 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     log_path = os.path.join(folder_path, log_filename)
 
     if not os.path.exists(log_path):
-        await update.message.reply_text(f"❗ Không tìm thấy file log: {log_filename}")
+        await update.message.reply_text(f"❗ Log file not found: {log_filename}")
         return
 
     try:
@@ -258,7 +257,7 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
         details = ""
         for item in webshells:
             details += (
-                f"📁 File: {item.get('path', 'Không rõ')}\n"
+                f"📁 File: {item.get('path', 'Unknown')}\n"
             )
 
         # Build ignored file list
@@ -268,50 +267,49 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Send main report
         await update.message.reply_text(
-            f"<b>📝 Kết quả quét từ {html.escape(log_filename)}:</b>\n"
-            f"- 🧾 Tổng số file đã quét: {total_files}\n"
-            f"- ❗ Webshell nghi ngờ: {potential_webshells}\n"
-            f"- ✅ File sạch: {not_webshell}\n"
-            f"- 🚫 File không đọc được: {total_ignored}\n"
-            f"- 🕒 Thời gian quét: {html.escape(scan_time)}\n\n"
-            f"<b>📂 Danh sách Webshell:</b>\n<pre>{html.escape(details) or 'Không có'}</pre>",
+            f"<b>📝 Scan results from {html.escape(log_filename)}:</b>\n"
+            f"- 🧾 Total files scanned: {total_files}\n"
+            f"- ❗ Suspected webshells: {potential_webshells}\n"
+            f"- ✅ Clean files: {not_webshell}\n"
+            f"- 🚫 Unreadable files: {total_ignored}\n"
+            f"- 🕒 Scan time: {html.escape(scan_time)}\n\n"
+            f"<b>📂 Webshell list:</b>\n<pre>{html.escape(details) or 'None'}</pre>",
             parse_mode="HTML"
         )
 
         # Send ignored file list if exists
         if ignored_details:
             await update.message.reply_text(
-                f"<b>🧾 Danh sách file bị bỏ qua:</b>\n<pre>{html.escape(ignored_details)}</pre>",
+                f"<b>🧾 Ignored files:</b>\n<pre>{html.escape(ignored_details)}</pre>",
                 parse_mode="HTML"
             )
 
-        await update.message.reply_text("ℹ️ Dùng /check [số] để xem các bản log khác. Ví dụ: /check 2")
+        await update.message.reply_text("ℹ️ Use /check [index] to view other logs. Example: /check 2")
 
     except Exception as e:
-        await update.message.reply_text(f"❗ Đã xảy ra lỗi khi đọc file log: {e}")
+        await update.message.reply_text(f"❗ Error reading log file: {e}")
 
 async def get(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    
     username = await require_login(update) 
 
     folder_path = f"./users/{username}/output"
     zip_files = glob.glob(os.path.join(folder_path, "*.zip"))
 
     if not zip_files:
-        await update.message.reply_text("❗ Không tìm thấy file zip kết quả quét.")
+        await update.message.reply_text("❗ No scan result zip file found.")
         return
 
     for zip_file in zip_files:
         try:
             await update.message.reply_document(
                 document=open(zip_file, "rb"),
-                caption=f"📦 Kết quả quét: {os.path.basename(zip_file)}"
+                caption=f"📦 Scan result: {os.path.basename(zip_file)}"
             )
         except Exception as e:
-            await update.message.reply_text(f"❗ Lỗi khi gửi file {os.path.basename(zip_file)}: {e}")
+            await update.message.reply_text(f"❗ Error sending file {os.path.basename(zip_file)}: {e}")
 
 async def alert(app):
-    print("[INFO] Bắt đầu kiểm tra định kỳ thư mục output...")
+    print("[INFO] Start monitoring output folder...")
     sent_files = set()  # ✅ keep list of sent files
 
     while True:
@@ -333,18 +331,18 @@ async def alert(app):
                                 await app.bot.send_document(
                                     chat_id=chat_id,
                                     document=f,
-                                    caption="🚨 Phát hiện webshell mới!",
+                                    caption="🚨 New webshell detected!",
                                 )
 
-                            print(f"[INFO] Đã gửi file: {zip_file}")
+                            print(f"[INFO] Sent file: {zip_file}")
                             sent_files.add(zip_file) 
                             break 
                         except asyncio.TimeoutError:
-                            print(f"[ERROR] Gửi file {zip_file} thất bại: Timeout")
+                            print(f"[ERROR] Failed to send file {zip_file}: Timeout")
                         except Exception as e:
-                            print(f"[ERROR] Gửi file {zip_file} thất bại: {e}")
+                            print(f"[ERROR] Failed to send file {zip_file}: {e}")
         except Exception as e:
-            print(f"[FATAL] Lỗi trong alert: {e}")
+            print(f"[FATAL] Error in alert: {e}")
 
 
 async def setup_background_tasks(app):
@@ -371,14 +369,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if state["step"] == "ask_username_register":
             state["username"] = text
             state["step"] = "ask_password_register"
-            await update.message.reply_text("🔒 Nhập mật khẩu:")
+            await update.message.reply_text("🔒 Enter password:")
 
         elif state["step"] == "ask_password_register":
             state["password"] = text
 
             # Check duplicate username
             if state["username"] in users:
-                await update.message.reply_text("❌ Username đã được sử dụng. Vui lòng thử username khác bằng lệnh /register.")
+                await update.message.reply_text("❌ Username already exists. Try another username with /register.")
                 del user_states[chat_id]
                 return
 
@@ -394,14 +392,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             }
             save_registered_users(users)
 
-            await update.message.reply_text(f"✅ Đăng ký thành công! Xin chào {state['username']}.\nThư mục riêng: {state['username']}")
+            await update.message.reply_text(f"✅ Registration successful! Welcome {state['username']}.\nPrivate folder: {state['username']}")
             del user_states[chat_id]
 
         # Handle login flow
         elif state["step"] == "ask_username_login":
             state["username"] = text
             state["step"] = "ask_password_login"
-            await update.message.reply_text("🔒 Nhập mật khẩu:")
+            await update.message.reply_text("🔒 Enter password:")
 
         elif state["step"] == "ask_password_login":
             state["password"] = text
@@ -434,10 +432,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                             shutil.copy2(src, dst)
                             os.utime(dst, None)
 
-                await update.message.reply_text(f"✅ Đăng nhập thành công! Xin chào {username}.")
-                await update.message.reply_text("✅ Bạn đã đăng nhập rồi! Gửi /menu để xem các lệnh hỗ trợ.")
+                await update.message.reply_text(f"✅ Login successful! Welcome {username}.")
+                await update.message.reply_text("✅ You are already logged in! Send /menu to see available commands.")
             else:
-                await update.message.reply_text("❌ Sai username hoặc mật khẩu. Vui lòng thử lại.")
+                await update.message.reply_text("❌ Incorrect username or password. Please try again.")
 
             del user_states[chat_id]
     else:
@@ -449,23 +447,23 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 break
 
         if found:
-            await update.message.reply_text("✅ Bạn đã đăng nhập rồi! Gửi /menu để xem các lệnh hỗ trợ.")
+            await update.message.reply_text("✅ You are already logged in! Send /menu to see available commands.")
         else:
-            await update.message.reply_text("🤖 Gửi /register hoặc /login để bắt đầu.")
+            await update.message.reply_text("🤖 Send /register or /login to start.")
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await require_login(update) 
     message = (
-        "<b>📋 Danh sách lệnh hỗ trợ:</b>\n\n"
-        "/menu - Hiển thị menu\n"
-        "/check - Hiển thị thông tin quét cơ bản\n"
-        "/get - Gửi file zip chứa kết quả quét\n"
-        "/info &lt;tên file&gt; - Hiển thị thông tin chi tiết webshell theo file log\n"
-        "/delete - Xóa file log hoặc zip\n"
-        "/logout - Đăng xuất khỏi tài khoản hiện tại\n"
-        "/forgot - Xóa thông tin của tài khoản hiện tại"
+        "<b>📋 Command list:</b>\n\n"
+        "/menu - Show this menu\n"
+        "/check - Show basic scan information\n"
+        "/get - Send the result zip file\n"
+        "/info <filename> - Show detailed info of a file from the log\n"
+        "/delete - Delete log or zip files\n"
+        "/logout - Log out from current account\n"
+        "/forgot - Delete current account information"
     )
-    await update.message.reply_text
+    await update.message.reply_text(message, parse_mode="HTML")
 
 def run_bot():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
@@ -483,7 +481,7 @@ def run_bot():
     app.add_handler(CommandHandler("delete", delete))
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 
-    print("🤖 Bot đang chạy polling (v20+)...")
+    print("🤖 Bot is running (polling, v20+)...")
     app.run_polling(drop_pending_updates=True)
 
 if __name__ == '__main__':
