@@ -15,7 +15,8 @@ def zip_all_malicious_files(detected_files: List[str], output_folder: str = "out
     zip_file_name = output_path / f"Webshells_{timestamp}.zip"
 
     try:
-        with zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        with zipfile.ZipFile(zip_file_name, 'w', compression=zipfile.ZIP_LZMA, 
+                           compresslevel=9) as zipf:
             for file_path in detected_files:
                 if os.path.exists(file_path):
                     arcname = os.path.relpath(file_path, start=base_folder) if base_folder else os.path.basename(file_path)
