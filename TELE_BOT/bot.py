@@ -487,7 +487,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await update.message.reply_text("🤖 Send /register or /login to get started.")
 
-async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await require_login(update) 
     message = (
@@ -523,3 +522,4 @@ def run_bot():
 
 if __name__ == '__main__':
     run_bot()
+
