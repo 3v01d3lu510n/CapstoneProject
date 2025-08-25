@@ -54,7 +54,7 @@ async def require_login(update: Update) -> str:
     chat_id = str(update.effective_chat.id)
     for u, chats in logged_in.items():
         if chat_id in chats:
-            return u, chat_id
+            return u
     await update.message.reply_text("❌ You are not logged in. Send /login to log in first.")
     raise ApplicationHandlerStop
 
@@ -94,7 +94,9 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def logout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
-    username, chat_id = await require_login(update) 
+    username = await require_login(update) 
+    chat_id = str(update.effective_chat.id)
+
     if username:
         logged_in[username].discard(chat_id)
         if not logged_in[username]:
@@ -104,7 +106,8 @@ async def logout(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ You are not logged in or already logged out.")
 
 async def forgot(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    username, chat_id = await require_login(update) 
+    username = await require_login(update) 
+    chat_id = str(update.effective_chat.id)
     users = load_registered_users()
     # Delete account in registered_users
     if username in users:
@@ -129,7 +132,7 @@ async def forgot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🗑 Account and folder deleted. To use again, register new with /register.")
 
 async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    username, chat_id = await require_login(update) 
+    username = await require_login(update) 
     idx = None
     filename_query = None
 
@@ -187,7 +190,7 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❗ Error reading log file: {e}")
 
 async def delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    username, chat_id = await require_login(update) 
+    username = await require_login(update) 
 
     args = context.args
     if not args:
@@ -248,7 +251,7 @@ async def delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❗ Error deleting: {e}")
 
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    username, chat_id = await require_login(update) 
+    username = await require_login(update) 
 
     log_dir = f"./users/{username}/logs"
     if not os.path.exists(log_dir):
@@ -323,7 +326,7 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def get(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
-    username, chat_id = await require_login(update) 
+    username = await require_login(update) 
 
     folder_path = f"./users/{username}/output"
     zip_files = glob.glob(os.path.join(folder_path, "*.zip"))
@@ -343,7 +346,7 @@ async def get(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def alert(app):
     print("[INFO] Start periodic check of output folder...")
-    sent_files = set()  # ✅ keep track of sent files
+    sent_files = set()
 
     while True:
         try:
@@ -487,19 +490,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await update.message.reply_text("🤖 Send /register or /login to get started.")
 
+
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await require_login(update) 
     message = (
         "<b>📋 Supported commands list:</b>\n\n"
-        "/menu - Show menu\n"
-        "/check - Show basic scan information\n"
-        "/get - Send zip file containing scan results\n"
-        "/info <filename> - Show detailed webshell info from log file\n"
-        "/delete - Delete log or zip file\n"
-        "/logout - Log out from current account\n"
-        "/forgot - Delete current account information"
+        "• 🗂 <b>/menu</b> – Show menu\n"
+        "• 📊 <b>/check</b> – Show basic scan information\n"
+        "• 📦 <b>/get</b> – Send zip file containing scan results\n"
+        "• ℹ️ <b>/info</b> <code>&lt;filename&gt;</code> – Show detailed webshell info from log file\n"
+        "• 🗑 <b>/delete</b> – Delete log or zip file\n"
+        "• 🚪 <b>/logout</b> – Log out from current account\n"
+        "• ❌ <b>/forgot</b> – Delete current account information"
     )
     await update.message.reply_text(message, parse_mode="HTML")
+
 
 def run_bot():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
@@ -520,6 +525,4 @@ def run_bot():
     print("🤖 Bot is running with polling (v20+)...")
     app.run_polling(drop_pending_updates=True)
 
-if __name__ == '__main__':
-    run_bot()
-
+if __name__ == '__main__':    run_bot()
