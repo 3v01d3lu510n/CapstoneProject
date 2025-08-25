@@ -97,6 +97,7 @@ def scan_files_and_log(files: List, detected_files=[]):
                 not_webshell_files.append(file_path)
     
     end_time = time.time()
+    total_files = len(webshell_files) + len(not_webshell_files) + len(unable_files)
     print(f"Scanned in {end_time - start_time:.2f} seconds")
     print("-----Scan Summary-----")
     print(f"TotalFilesFound: {len(webshell_files) + len(not_webshell_files) + len(unable_files)}")
@@ -105,8 +106,8 @@ def scan_files_and_log(files: List, detected_files=[]):
     print(f"NotWebshell: {len(not_webshell_files)}")
     print(f"TotalFilesIgnored: {len(unable_files)}")
     print("-----Output Summary-----")
-    result_utils.create_log_file(len(files), webshell_files, not_webshell_files, unable_files)
-    result_utils.create_summary_file(len(files), webshell_files, unable_files)
+    result_utils.create_log_file(total_files, webshell_files, not_webshell_files, unable_files)
+    result_utils.create_summary_file(total_files, webshell_files, unable_files)
     if webshell_files is not None:
         zip_utils.zip_all_malicious_files(webshell_files)
     
