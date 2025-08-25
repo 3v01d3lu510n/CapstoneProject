@@ -1,7 +1,8 @@
 import os
 import re
 from string import ascii_uppercase
-from ctypes import windll
+import ctypes
+import platform
 
 home_dir = os.path.expanduser("~")
 
@@ -21,37 +22,54 @@ default_paths = [
 ]
 
 def expand_windows_drives(paths: list[str]) -> list[str]:
-    if os.name != "nt":
-        return paths
+    """Expand paths for Windows drives, return unmodified paths on other systems."""
+    if platform.system() != "Windows":
+        return [p.replace("\\", "/") for p in paths]
 
-    bitmask = windll.kernel32.GetLogicalDrives()
-    drives = [f"{d}:/" for i, d in enumerate(ascii_uppercase) if bitmask & (1 << i)]
+    try:
+        expanded: set[str] = set()
+        # Only import windll on Windows
+        bitmask = ctypes.windll.kernel32.GetLogicalDrives()
+        drives = [f"{d}:/" for i, d in enumerate(ascii_uppercase) if bitmask & (1 << i)]
+        
+        for path in paths:
+            p = path.replace("\\", "/")
+            rel = re.sub(r"^[A-Z]:/", "", p, flags=re.IGNORECASE)
+            rel = rel.lstrip("/")
+            for drive in drives:
+                candidate = os.path.join(drive, rel).replace("\\", "/")
+                expanded.add(candidate)
+        return sorted(expanded)
+    except AttributeError:
+        # Fallback if windll is not available
+        return [p.replace("\\", "/") for p in paths]
 
-    expanded: set[str] = set()
-    for path in paths:
-        p = path.replace("\\", "/")
-        rel = re.sub(r"^[A-Z]:/", "", p, flags=re.IGNORECASE)
-        rel = rel.lstrip("/")
-        for drive in drives:
-            candidate = os.path.join(drive, rel).replace("\\", "/")
-            expanded.add(candidate)
-    return sorted(expanded)
-
-def get_apache_webroot(config_file: str = "/etc/httpd/conf/httpd.conf") -> str | None:
+def get_apache_webroot(config_file: str = None) -> str | None:
+    """Get Apache webroot with system-specific default config path."""
+    if config_file is None:
+        config_file = "/etc/httpd/conf/httpd.conf" if platform.system() != "Windows" else "C:/Apache24/conf/httpd.conf"
     if os.path.exists(config_file):
         content = open(config_file, "r").read()
         if m := re.search(r"DocumentRoot\s+\"(.*)\"", content):
             return m.group(1)
     return None
 
-def get_nginx_webroot(config_file: str = "/etc/nginx/nginx.conf") -> str | None:
+def get_nginx_webroot(config_file: str = None) -> str | None:
+    """Get Nginx webroot with system-specific default config path."""
+    if config_file is None:
+        config_file = "/etc/nginx/nginx.conf" if platform.system() != "Windows" else "C:/nginx/conf/nginx.conf"
     if os.path.exists(config_file):
         content = open(config_file, "r").read()
         if m := re.search(r"root\s+(.*);", content):
             return m.group(1)
     return None
 
-def get_iis_webroot(config_file: str = "C:/Windows/System32/inetsrv/config/applicationHost.config") -> str | None:
+def get_iis_webroot(config_file: str = None) -> str | None:
+    """Get IIS webroot with system-specific default config path."""
+    if config_file is None:
+        config_file = "C:/Windows/System32/inetsrv/config/applicationHost.config" if platform.system() == "Windows" else None
+    if not config_file:
+        return None
     if os.path.exists(config_file):
         content = open(config_file, "r").read()
         if m := re.search(r"<site name=\".*\" id=\".*\">.*?<physicalPath>(.*)</physicalPath>", content, re.DOTALL):
@@ -102,15 +120,23 @@ def check_default_paths_for_php(paths: list[str]) -> str | None:
     return None
 
 def find_webroot() -> str:
-    webroot = (
-        get_apache_webroot()
-        or get_nginx_webroot()
-        or get_iis_webroot()
-        or get_lighttpd_webroot()
-        or get_caddy_webroot()
-        or get_cherokee_webroot()
-        or get_litespeed_webroot()
-        or get_tomcat_webroot()
-        or check_default_paths_for_php(expand_windows_drives(default_paths))
-    )
+    """Find webroot directory with system-specific checks."""
+    checkers = [
+        get_apache_webroot,
+        get_nginx_webroot,
+        (get_iis_webroot if platform.system() == "Windows" else lambda: None),
+        get_lighttpd_webroot,
+        get_caddy_webroot,
+        get_cherokee_webroot,
+        get_litespeed_webroot,
+        get_tomcat_webroot,
+    ]
+    
+    for checker in checkers:
+        result = checker()
+        if result:
+            return result
+            
+    # Check default paths as last resort
+    webroot = check_default_paths_for_php(expand_windows_drives(default_paths))
     return webroot or "Not found webroot folder, please use manual search"
