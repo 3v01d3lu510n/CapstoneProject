@@ -33,6 +33,7 @@ Or you can download by new release. After downloading the compressed archive, mo
 # Requirements
 For the best performance of the tool, run the script below and fulfill the following version requirements
 - Python < 3.12
+- PHP = 8.4.x
 ```
 pip3 install -r requirements.txt
 ```
