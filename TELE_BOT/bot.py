@@ -39,11 +39,11 @@ def load_registered_users():
             return {}
     return {}
 
-def hash_password(password: str, method: str = "sha256") -> str:
-    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+def hash_password(password: str) -> str:
+    return hashlib.sha1(password.encode("utf-8")).hexdigest()
 
-def verify_password(password: str, hashed: str, method: str = "sha256") -> bool:
-    return hash_password(password, method) == hashed
+def verify_password(password: str, hashed: str) -> bool:
+    return hash_password(password) == hashed
 
 async def require_login(update: Update) -> str:
     chat_id = str(update.effective_chat.id)
@@ -521,4 +521,5 @@ def run_bot():
     app.run_polling(drop_pending_updates=True)
 
 if __name__ == '__main__':    run_bot()
+
 
