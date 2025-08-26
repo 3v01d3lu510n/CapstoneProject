@@ -40,12 +40,7 @@ def load_registered_users():
     return {}
 
 def hash_password(password: str, method: str = "sha256") -> str:
-    if method == "sha1":
-        return hashlib.sha1(password.encode("utf-8")).hexdigest()
-    elif method == "sha256":
-        return hashlib.sha256(password.encode("utf-8")).hexdigest()
-    else:
-        raise ValueError("Unsupported hash method")
+    return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
 def verify_password(password: str, hashed: str, method: str = "sha256") -> bool:
     return hash_password(password, method) == hashed
@@ -526,3 +521,4 @@ def run_bot():
     app.run_polling(drop_pending_updates=True)
 
 if __name__ == '__main__':    run_bot()
+
