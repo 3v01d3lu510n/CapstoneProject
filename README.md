@@ -67,4 +67,6 @@ options:
 # Project Detail
 For more detail, read [these documents](https://github.com/3v01d3lu510n/CapstoneProject/tree/main/Documents) 
 
+# Changelog
+
 
